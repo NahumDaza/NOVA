@@ -32,19 +32,51 @@ class Orchestrator:
         if use_memory:
             self.memory.add_user_message(conversation_id, message)
             recent_history = self.memory.get_recent(conversation_id)
+            last_artifact = self.memory.get_last_artifact(conversation_id)
         else:
             recent_history = []
+            last_artifact = None
+
+        approval_required = False
 
         if intent == "organize_day":
             response = self.work.organize_day(message)
+
         elif intent == "draft_message":
             response = self.comms.draft_message(message)
+            approval_required = True
+            if use_memory:
+                self.memory.save_last_artifact(conversation_id, "draft_message", response)
+
+        elif intent == "refine_previous_output":
+            if last_artifact and last_artifact.get("content"):
+                response = self.llm.refine_text(
+                    original_text=last_artifact["content"],
+                    instruction=message,
+                    language=language,
+                )
+                approval_required = last_artifact.get("type") == "draft_message"
+                if use_memory:
+                    self.memory.save_last_artifact(
+                        conversation_id,
+                        last_artifact.get("type", "text"),
+                        response,
+                    )
+            else:
+                response = (
+                    "No tengo un contenido previo claro para refinar en esta conversación. "
+                    "Primero dame el borrador, texto o contenido base."
+                )
+
         elif intent in {"calculate_math", "solve_physics", "solve_chemistry"}:
             response = self.logic.solve(message, intent=intent)
+
         elif intent == "think_process":
             response = self.strategy.think_process(message)
+
         elif intent == "improve_english":
             response = correction or "No veo un error importante en tu inglés. Envíame la frase y te la corrijo o mejoro."
+
         else:
             response = self.llm.generate(
                 system_prompt="Eres NOVA. Tu idioma principal es español.",
@@ -59,6 +91,6 @@ class Orchestrator:
             "intent": intent,
             "response": response,
             "correction": correction,
-            "approval_required": intent == "draft_message",
+            "approval_required": approval_required,
             "conversation_id": conversation_id,
         }

@@ -36,7 +36,7 @@ class Orchestrator:
             return self._result(intent, response, correction, approval_required=False)
 
         if intent == "improve_english":
-            response = correction or "I don’t see a major issue in your English. Send me the sentence and I’ll refine it."
+            response = correction or "No veo un error importante en tu inglés. Envíame la frase y te la corrijo o mejoro."
             return self._result(intent, response, correction, approval_required=False)
 
         response = self.work.general_assist(message)

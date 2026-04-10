@@ -9,20 +9,20 @@ class EnglishCoach:
 
         if re.search(r"i didn.?t went", text):
             corrections.append(
-                "It should be 'I didn't go,' not 'I didn't went.' After 'didn't,' the verb stays in base form."
+                "Se dice 'I didn't go', no 'I didn't went', porque después de 'didn't' el verbo debe ir en su forma base."
             )
 
         if re.search(r"he don.?t", text):
             corrections.append(
-                "It should be 'he doesn't,' not 'he don't.' Third-person singular requires 'doesn't.'"
+                "Se dice 'he doesn't', no 'he don't', porque en tercera persona singular se usa 'doesn't'."
             )
 
         if re.search(r"i have \d+ years", text):
             corrections.append(
-                "In English we say 'I am X years old,' not 'I have X years.'"
+                "En inglés se dice 'I am X years old', no 'I have X years'."
             )
 
         if corrections:
-            return "Correction: " + " ".join(corrections)
+            return "Corrección rápida: " + " ".join(corrections)
 
         return None

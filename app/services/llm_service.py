@@ -1,4 +1,34 @@
-class LLMService:
+from __future__ import annotations
+
+import os
+from typing import Protocol
+
+from dotenv import load_dotenv
+
+from app.prompts.system_prompt import NOVA_SYSTEM_PROMPT
+
+load_dotenv()
+
+
+class LLMProvider(Protocol):
+    def generate(
+        self,
+        system_prompt: str,
+        user_message: str,
+        history: list[dict[str, str]] | None = None,
+    ) -> str:
+        ...
+
+    def refine_text(
+        self,
+        original_text: str,
+        instruction: str,
+        language: str = "es",
+    ) -> str:
+        ...
+
+
+class PlaceholderProvider:
     def generate(
         self,
         system_prompt: str,
@@ -20,43 +50,107 @@ class LLMService:
         instruction: str,
         language: str = "es",
     ) -> str:
-        instruction_lower = instruction.lower()
+        return (
+            f"[PLACEHOLDER]\nInstrucción: {instruction}\n\n"
+            f"Texto base:\n{original_text}"
+        )
 
-        refined = original_text
 
-        if "más formal" in instruction_lower or "mas formal" in instruction_lower or "more formal" in instruction_lower:
-            refined = self._make_more_formal(refined, language)
+class OpenAIProvider:
+    def __init__(self) -> None:
+        from openai import OpenAI
 
-        if (
-            "más breve" in instruction_lower
-            or "mas breve" in instruction_lower
-            or "más corto" in instruction_lower
-            or "mas corto" in instruction_lower
-            or "shorter" in instruction_lower
-            or "brief" in instruction_lower
-        ):
-            refined = self._make_shorter(refined)
+        self.client = OpenAI()
+        self.model = os.getenv("OPENAI_MODEL", "gpt-5")
 
-        if "tradúcelo" in instruction_lower or "traducelo" in instruction_lower or "translate" in instruction_lower:
-            refined = self._translate_placeholder(refined, instruction_lower)
+    def generate(
+        self,
+        system_prompt: str,
+        user_message: str,
+        history: list[dict[str, str]] | None = None,
+    ) -> str:
+        history = history or []
 
-        return refined
-
-    def _make_more_formal(self, text: str, language: str) -> str:
-        if language == "es":
-            return text.replace("Hola,", "Estimado profesor,").replace("Gracias.", "Muchas gracias por su atención.")
-        return text.replace("Hi,", "Dear Professor,").replace("Thanks.", "Thank you for your time and consideration.")
-
-    def _make_shorter(self, text: str) -> str:
-        sentences = [s.strip() for s in text.split(".") if s.strip()]
-        shortened = ". ".join(sentences[:2]).strip()
-        return shortened + "." if shortened and not shortened.endswith(".") else shortened
-
-    def _translate_placeholder(self, text: str, instruction: str) -> str:
-        if "inglés" in instruction or "ingles" in instruction or "english" in instruction:
-            return (
-                "Dear Professor,\n\n"
-                "I hope you are doing well. I am writing to let you know that I was unable to attend class.\n\n"
-                "Thank you for your understanding.\n"
+        input_items: list[dict[str, str]] = []
+        for item in history[-6:]:
+            input_items.append(
+                {
+                    "role": item["role"],
+                    "content": item["content"],
+                }
             )
-        return text
+
+        input_items.append(
+            {
+                "role": "user",
+                "content": user_message,
+            }
+        )
+
+        response = self.client.responses.create(
+            model=self.model,
+            instructions=system_prompt,
+            input=input_items,
+        )
+        return response.output_text.strip()
+
+    def refine_text(
+        self,
+        original_text: str,
+        instruction: str,
+        language: str = "es",
+    ) -> str:
+        response_language = "español" if language.startswith("es") else "English"
+
+        response = self.client.responses.create(
+            model=self.model,
+            instructions=(
+                f"{NOVA_SYSTEM_PROMPT}\n\n"
+                "Tu tarea es refinar un texto existente.\n"
+                "Debes mantener la intención original y aplicar únicamente la instrucción dada.\n"
+                f"Responde en {response_language}.\n"
+                "Devuelve solo el texto final refinado, sin explicación adicional."
+            ),
+            input=(
+                f"Instrucción del usuario:\n{instruction}\n\n"
+                f"Texto original:\n{original_text}"
+            ),
+        )
+        return response.output_text.strip()
+
+
+class LLMService:
+    def __init__(self) -> None:
+        provider_name = os.getenv("NOVA_LLM_PROVIDER", "openai").lower()
+
+        if provider_name == "openai":
+            try:
+                self.provider: LLMProvider = OpenAIProvider()
+            except Exception:
+                self.provider = PlaceholderProvider()
+        else:
+            self.provider = PlaceholderProvider()
+
+    def generate(
+        self,
+        system_prompt: str,
+        user_message: str,
+        history: list[dict[str, str]] | None = None,
+    ) -> str:
+        return self.provider.generate(
+            system_prompt=system_prompt,
+            user_message=user_message,
+            history=history,
+        )
+
+    def refine_text(
+        self,
+        original_text: str,
+        instruction: str,
+        language: str = "es",
+    ) -> str:
+        return self.provider.refine_text(
+            original_text=original_text,
+            instruction=instruction,
+            language=language,
+        )

@@ -6,6 +6,7 @@ from app.modules.work import WorkModule
 from app.services.english_coach import EnglishCoach
 from app.memory.history import ConversationMemory
 from app.services.llm_service import LLMService
+from app.prompts.system_prompt import NOVA_SYSTEM_PROMPT
 
 
 class Orchestrator:
@@ -43,7 +44,7 @@ class Orchestrator:
             response = self.work.organize_day(message)
 
         elif intent == "draft_message":
-            response = self.comms.draft_message(message)
+            response = self.comms.draft_message(message=message, language=language)
             approval_required = True
             if use_memory:
                 self.memory.save_last_artifact(conversation_id, "draft_message", response)
@@ -79,7 +80,7 @@ class Orchestrator:
 
         else:
             response = self.llm.generate(
-                system_prompt="Eres NOVA. Tu idioma principal es español.",
+                system_prompt=NOVA_SYSTEM_PROMPT,
                 user_message=message,
                 history=recent_history,
             )

@@ -1,34 +1,54 @@
-from sympy import Eq, Symbol, sympify, solve
+from sympy import symbols, Eq, sympify, solve, diff, integrate
 
 
 class LogicModule:
     def solve(self, message: str, intent: str) -> str:
-        if intent == "calculate_math":
-            return self._solve_basic_math(message)
+        text = message.lower().replace("solve", "").replace("resuelve", "").strip()
 
-        if intent == "solve_physics":
-            return (
-                "Puedo ayudarte con física. En la siguiente versión agregaré parser de variables, "
-                "unidades y fórmulas típicas de cinemática y dinámica."
-            )
+        # ecuaciones
+        if "=" in text:
+            return self._solve_equation(text)
 
-        if intent == "solve_chemistry":
-            return (
-                "Puedo ayudarte con química. En la siguiente versión agregaré conversiones molares, "
-                "masa molar y estequiometría básica."
-            )
+        # derivadas
+        if "derivative" in text or "derivada" in text:
+            return self._derivative(text)
 
-        return "No pude clasificar el cálculo solicitado."
+        # integrales
+        if "integral" in text:
+            return self._integral(text)
 
-    def _solve_basic_math(self, message: str) -> str:
-        text = message.strip().lower()
-        text = text.replace("solve", "").replace("resuelve", "").strip()
+        # expresión directa
+        return self._evaluate_expression(text)
 
-        if "=" not in text:
-            return "Pásame una ecuación simple, por ejemplo: x + 2 = 5."
+    def _solve_equation(self, text: str) -> str:
+        try:
+            left, right = text.split("=")
+            x = symbols("x")
+            eq = Eq(sympify(left), sympify(right))
+            result = solve(eq, x)
+            return f"Resultado: x = {result[0]}" if result else "Sin solución encontrada."
+        except Exception:
+            return "No pude resolver la ecuación. Verifica el formato."
 
-        left, right = text.split("=", maxsplit=1)
-        x = Symbol("x")
-        equation = Eq(sympify(left), sympify(right))
-        result = solve(equation, x)
-        return f"Resultado: x = {result[0]}" if result else "No encontré una solución para esa ecuación."
+    def _evaluate_expression(self, text: str) -> str:
+        try:
+            result = sympify(text)
+            return f"Resultado: {result}"
+        except Exception:
+            return "No pude interpretar la expresión matemática."
+
+    def _derivative(self, text: str) -> str:
+        try:
+            x = symbols("x")
+            expr = sympify(text.replace("derivative of", "").replace("derivada de", ""))
+            return f"Derivada: {diff(expr, x)}"
+        except Exception:
+            return "No pude calcular la derivada."
+
+    def _integral(self, text: str) -> str:
+        try:
+            x = symbols("x")
+            expr = sympify(text.replace("integral of", ""))
+            return f"Integral: {integrate(expr, x)}"
+        except Exception:
+            return "No pude calcular la integral."

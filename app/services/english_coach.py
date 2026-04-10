@@ -1,17 +1,28 @@
+import re
+
+
 class EnglishCoach:
     def maybe_correct(self, message: str, language: str = "auto") -> str | None:
-        lower = message.lower()
+        text = message.lower()
 
-        if "i didn't went" in lower:
-            return (
-                "Quick correction: it should be 'I didn't go,' not 'I didn't went.' "
-                "After 'didn't,' the verb stays in base form."
+        corrections = []
+
+        if re.search(r"i didn.?t went", text):
+            corrections.append(
+                "It should be 'I didn't go,' not 'I didn't went.' After 'didn't,' the verb stays in base form."
             )
 
-        if "he don't" in lower:
-            return (
-                "Quick correction: it should be 'he doesn't,' not 'he don't.' "
-                "Third-person singular in the present takes 'doesn't.'"
+        if re.search(r"he don.?t", text):
+            corrections.append(
+                "It should be 'he doesn't,' not 'he don't.' Third-person singular requires 'doesn't.'"
             )
+
+        if re.search(r"i have \d+ years", text):
+            corrections.append(
+                "In English we say 'I am X years old,' not 'I have X years.'"
+            )
+
+        if corrections:
+            return "Correction: " + " ".join(corrections)
 
         return None

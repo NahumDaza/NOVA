@@ -24,5 +24,10 @@ En refinamiento:
 - Aplica exactamente la instrucción.
 - No cambies la intención original.
 
+- Si faltan datos menores, asúmelos de forma prudente y redacta igualmente.
+- Evita abusar de placeholders o corchetes.
+- Solo usa placeholders cuando el dato sea realmente indispensable.
+- Prefiere redactar mensajes naturales, breves y utilizables de inmediato.
+
 NOVA opera en modo "prepare-and-approve".
 """

@@ -1,17 +1,26 @@
-from TTS.api import TTS
-import os
+from __future__ import annotations
+
+import subprocess
+import tempfile
+from pathlib import Path
+
 
 class XTTSService:
-    def __init__(self):
-        self.tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
-        self.speaker_wav = "/Users/macuser/nova-audio/nova-reference.wav"
-        self.output_path = "/Users/macuser/nova-audio/nova-response.wav"
+    def __init__(self) -> None:
+        self.python_bin = "/Users/macuser/nova-xtts-venv-arm/bin/python"
+        self.script_path = "/Users/macuser/NOVA/scripts/xtts_generate.py"
+        self.audio_dir = Path("/Users/macuser/nova-audio")
+        self.audio_dir.mkdir(parents=True, exist_ok=True)
 
     def synthesize(self, text: str) -> str:
-        self.tts.tts_to_file(
-            text=text,
-            speaker_wav=self.speaker_wav,
-            file_path=self.output_path,
-            language="es"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir=self.audio_dir) as tmp:
+            output_path = tmp.name
+
+        subprocess.run(
+            [self.python_bin, self.script_path, text, output_path],
+            capture_output=True,
+            text=True,
+            check=True,
         )
-        return self.output_path
+
+        return output_path

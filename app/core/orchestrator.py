@@ -6,6 +6,7 @@ from app.modules.work import WorkModule
 from app.services.english_coach import EnglishCoach
 from app.memory.history import ConversationMemory
 from app.services.llm_service import LLMService
+from app.core.postprocessor import ResponsePostProcessor
 from app.prompts.system_prompt import NOVA_SYSTEM_PROMPT
 
 
@@ -18,6 +19,7 @@ class Orchestrator:
         self.strategy = StrategyModule()
         self.english_coach = EnglishCoach()
         self.memory = ConversationMemory()
+        self.postprocessor = ResponsePostProcessor()
         self.llm = LLMService()
 
     def handle(
@@ -46,8 +48,6 @@ class Orchestrator:
         elif intent == "draft_message":
             response = self.comms.draft_message(message=message, language=language)
             approval_required = True
-            if use_memory:
-                self.memory.save_last_artifact(conversation_id, "draft_message", response)
 
         elif intent == "refine_previous_output":
             if last_artifact and last_artifact.get("content"):
@@ -57,12 +57,6 @@ class Orchestrator:
                     language=language,
                 )
                 approval_required = last_artifact.get("type") == "draft_message"
-                if use_memory:
-                    self.memory.save_last_artifact(
-                        conversation_id,
-                        last_artifact.get("type", "text"),
-                        response,
-                    )
             else:
                 response = (
                     "No tengo un contenido previo claro para refinar en esta conversación. "
@@ -76,7 +70,10 @@ class Orchestrator:
             response = self.strategy.think_process(message)
 
         elif intent == "improve_english":
-            response = correction or "No veo un error importante en tu inglés. Envíame la frase y te la corrijo o mejoro."
+            response = correction or (
+                "No veo un error importante en tu inglés. "
+                "Envíame la frase y te la corrijo o mejoro."
+            )
 
         else:
             response = self.llm.generate(
@@ -85,8 +82,24 @@ class Orchestrator:
                 history=recent_history,
             )
 
+        response = self.postprocessor.clean(
+            intent=intent,
+            response=response,
+            language=language,
+        )
+
         if use_memory:
             self.memory.add_assistant_message(conversation_id, response)
+
+            if intent == "draft_message":
+                self.memory.save_last_artifact(conversation_id, "draft_message", response)
+
+            elif intent == "refine_previous_output" and last_artifact and last_artifact.get("content"):
+                self.memory.save_last_artifact(
+                    conversation_id,
+                    last_artifact.get("type", "text"),
+                    response,
+                )
 
         return {
             "intent": intent,

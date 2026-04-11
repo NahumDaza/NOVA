@@ -1,6 +1,6 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from pydantic import BaseModel, Field
-
+import subprocess
 
 from app.core.orchestrator import Orchestrator
 from app.services.stt_service import WhisperCppSTTService
@@ -10,6 +10,7 @@ from app.services.tts_service import XTTSService
 router = APIRouter()
 stt = WhisperCppSTTService()
 orchestrator = Orchestrator()
+
 
 
 class VoiceRespondRequest(BaseModel):
@@ -118,6 +119,7 @@ async def respond_with_audio(
         )
 
         audio_path = tts.synthesize(result["response"])
+        subprocess.Popen(["afplay", audio_path])
 
         return {
             "transcript": transcript,

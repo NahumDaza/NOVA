@@ -4,6 +4,7 @@ import os
 from typing import Protocol
 
 from dotenv import load_dotenv
+import httpx
 
 from app.prompts.system_prompt import NOVA_SYSTEM_PROMPT
 
@@ -37,7 +38,6 @@ class PlaceholderProvider:
     ) -> str:
         history = history or []
         context = " | ".join([f"{m['role']}: {m['content']}" for m in history[-4:]])
-
         return (
             "LLM placeholder activo. "
             f"Mensaje actual: {user_message}. "
@@ -50,18 +50,28 @@ class PlaceholderProvider:
         instruction: str,
         language: str = "es",
     ) -> str:
-        return (
-            f"[PLACEHOLDER]\nInstrucción: {instruction}\n\n"
-            f"Texto base:\n{original_text}"
-        )
+        return f"[PLACEHOLDER]\nInstrucción: {instruction}\n\nTexto base:\n{original_text}"
 
 
-class OpenAIProvider:
+class LMStudioProvider:
     def __init__(self) -> None:
-        from openai import OpenAI
+        self.base_url = os.getenv("LMSTUDIO_BASE_URL", "http://127.0.0.1:1234/v1")
+        self.model = os.getenv("LMSTUDIO_MODEL", "qwen2.5-7b-instruct-mlx")
+        self.timeout = 180.0
 
-        self.client = OpenAI()
-        self.model = os.getenv("OPENAI_MODEL", "gpt-5")
+    def _chat_completion(self, messages: list[dict[str, str]]) -> str:
+        response = httpx.post(
+            f"{self.base_url}/chat/completions",
+            json={
+                "model": self.model,
+                "messages": messages,
+                "temperature": 0.4,
+            },
+            timeout=self.timeout,
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data["choices"][0]["message"]["content"].strip()
 
     def generate(
         self,
@@ -71,28 +81,13 @@ class OpenAIProvider:
     ) -> str:
         history = history or []
 
-        input_items: list[dict[str, str]] = []
-        for item in history[-6:]:
-            input_items.append(
-                {
-                    "role": item["role"],
-                    "content": item["content"],
-                }
-            )
+        messages: list[dict[str, str]] = [
+            {"role": "system", "content": system_prompt}
+        ]
+        messages.extend(history[-6:])
+        messages.append({"role": "user", "content": user_message})
 
-        input_items.append(
-            {
-                "role": "user",
-                "content": user_message,
-            }
-        )
-
-        response = self.client.responses.create(
-            model=self.model,
-            instructions=system_prompt,
-            input=input_items,
-        )
-        return response.output_text.strip()
+        return self._chat_completion(messages)
 
     def refine_text(
         self,
@@ -102,30 +97,37 @@ class OpenAIProvider:
     ) -> str:
         response_language = "español" if language.startswith("es") else "English"
 
-        response = self.client.responses.create(
-            model=self.model,
-            instructions=(
-                f"{NOVA_SYSTEM_PROMPT}\n\n"
-                "Tu tarea es refinar un texto existente.\n"
-                "Debes mantener la intención original y aplicar únicamente la instrucción dada.\n"
-                f"Responde en {response_language}.\n"
-                "Devuelve solo el texto final refinado, sin explicación adicional."
-            ),
-            input=(
-                f"Instrucción del usuario:\n{instruction}\n\n"
-                f"Texto original:\n{original_text}"
-            ),
-        )
-        return response.output_text.strip()
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    f"{NOVA_SYSTEM_PROMPT}\n\n"
+                    "Tu tarea es refinar un texto existente.\n"
+                    "Mantén la intención original.\n"
+                    "Aplica únicamente la instrucción dada.\n"
+                    f"Responde en {response_language}.\n"
+                    "Devuelve solo el texto final refinado."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Instrucción del usuario:\n{instruction}\n\n"
+                    f"Texto original:\n{original_text}"
+                ),
+            },
+        ]
+
+        return self._chat_completion(messages)
 
 
 class LLMService:
     def __init__(self) -> None:
-        provider_name = os.getenv("NOVA_LLM_PROVIDER", "openai").lower()
+        provider_name = os.getenv("NOVA_LLM_PROVIDER", "lmstudio").lower()
 
-        if provider_name == "openai":
+        if provider_name == "lmstudio":
             try:
-                self.provider: LLMProvider = OpenAIProvider()
+                self.provider: LLMProvider = LMStudioProvider()
             except Exception:
                 self.provider = PlaceholderProvider()
         else:

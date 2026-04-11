@@ -1,31 +1,26 @@
-from collections import defaultdict
-from typing import Any
+from __future__ import annotations
+
+from app.memory.store import MemoryStore
 
 
 class ConversationMemory:
     def __init__(self) -> None:
-        self.history_store: dict[str, list[dict[str, str]]] = defaultdict(list)
-        self.artifact_store: dict[str, dict[str, Any]] = defaultdict(dict)
+        self.store = MemoryStore()
 
     def add_user_message(self, conversation_id: str, message: str) -> None:
-        self.history_store[conversation_id].append({"role": "user", "content": message})
+        self.store.add_message(conversation_id, "user", message)
 
     def add_assistant_message(self, conversation_id: str, message: str) -> None:
-        self.history_store[conversation_id].append({"role": "assistant", "content": message})
+        self.store.add_message(conversation_id, "assistant", message)
 
     def get_recent(self, conversation_id: str, limit: int = 6) -> list[dict[str, str]]:
-        return self.history_store[conversation_id][-limit:]
+        return self.store.get_recent_messages(conversation_id, limit=limit)
 
     def clear(self, conversation_id: str) -> None:
-        self.history_store[conversation_id] = []
-        self.artifact_store[conversation_id] = {}
+        self.store.clear_conversation(conversation_id)
 
     def save_last_artifact(self, conversation_id: str, artifact_type: str, content: str) -> None:
-        self.artifact_store[conversation_id] = {
-            "type": artifact_type,
-            "content": content,
-        }
+        self.store.save_artifact(conversation_id, artifact_type, content)
 
-    def get_last_artifact(self, conversation_id: str) -> dict[str, Any] | None:
-        artifact = self.artifact_store.get(conversation_id)
-        return artifact if artifact else None
+    def get_last_artifact(self, conversation_id: str) -> dict[str, str] | None:
+        return self.store.get_artifact(conversation_id)

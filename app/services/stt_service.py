@@ -119,6 +119,14 @@ class WhisperCppSTTService:
             "Hola Terra como vas": "Hola Terra, ¿cómo vas?",
             "Hola Terra que tal todo": "Hola Terra, ¿qué tal todo?",
             "Hola Terra buen dia": "Hola Terra, buen día",
+            "o la terra": "Hola Terra",
+            "O la terra": "Hola Terra",
+            "terra como más": "Terra, ¿cómo vas?",
+            "Terra como más": "Terra, ¿cómo vas?",
+            "terra como vas": "Terra, ¿cómo vas?",
+            "Terra como vas": "Terra, ¿cómo vas?",
+            "hola terra buen dia": "Hola Terra, buen día",
+            "Hola terra buen dia": "Hola Terra, buen día",
             "correo breve para mi profesor porque falta clase": "correo breve para mi profesor porque falté a clase",
             "redacto un correo": "redacta un correo",
             "email": "correo",
@@ -128,4 +136,9 @@ class WhisperCppSTTService:
         for old, new in replacements.items():
             cleaned = cleaned.replace(old, new)
 
+        cleaned = cleaned.strip()
+        if cleaned.lower() in {"hola terra", "terra", "hola terra buen día", "terra, ¿cómo vas?"}:
+            return cleaned
+
         return cleaned
+    

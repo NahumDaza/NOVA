@@ -96,7 +96,12 @@ def send_audio(audio_path: str) -> dict:
         }
 
         response = httpx.post(API_URL, files=files, data=data, timeout=300.0)
-        response.raise_for_status()
+
+        if response.status_code >= 400:
+            print("\n--- ERROR BODY ---")
+            print(response.text)
+            response.raise_for_status()
+
         return response.json()
     
 def play_audio(audio_path: str) -> None:
@@ -131,6 +136,7 @@ def main() -> int:
             intent = result.get("intent", "")
             response = result.get("response", "")
             audio_path_out = result.get("audio_path", "")
+            tts_error = result.get("tts_error")
             spoken_response = result.get("spoken_response", "")
 
             if transcript:
@@ -150,13 +156,17 @@ def main() -> int:
                 if audio_path_out:
                     print("\nTERRA está respondiendo...")
                     play_audio(audio_path_out)
-                    time.sleep(0.25)
+                    time.sleep(0.5)
                 
                 print("\n--- SPOKEN RESPONSE ---")
                 print(spoken_response)
-                
+
             else:
                 print("\nNo se detectó voz útil en este ciclo.")
+
+            if tts_error:
+                print(f"\n--- TTS ERROR ---")
+                print(tts_error)
 
             time.sleep(0.5)
 

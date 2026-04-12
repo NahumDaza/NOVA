@@ -123,6 +123,7 @@ async def respond_with_audio(
                 "transcript": "",
                 "intent": "no_speech_detected",
                 "response": "No detecté voz con suficiente claridad. Intenta hablar un poco más cerca del micrófono.",
+                "spoken_response": "No te escuché con claridad. Intenta otra vez.",
                 "correction": None,
                 "approval_required": False,
                 "conversation_id": conversation_id,
@@ -137,12 +138,18 @@ async def respond_with_audio(
         )
 
         audio_source = result.get("spoken_response") or result["response"]
-        audio_path = tts.synthesize(audio_source, intent=result["intent"])
 
-        if autoplay and audio_path:
-            subprocess.Popen(["afplay", "-q", "1", audio_path])
+        audio_path = None
+        tts_error = None
 
-        return {
+        try:
+            audio_path = tts.synthesize(audio_source, intent=result["intent"])
+            if autoplay and audio_path:
+                subprocess.Popen(["afplay", "-q", "1", audio_path])
+        except Exception as tts_exc:
+            tts_error = str(tts_exc)
+
+        payload = {
             "transcript": transcript,
             "intent": result["intent"],
             "response": result["response"],
@@ -152,5 +159,11 @@ async def respond_with_audio(
             "conversation_id": result["conversation_id"],
             "audio_path": audio_path,
         }
+
+        if tts_error:
+            payload["tts_error"] = tts_error
+
+        return payload
+
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

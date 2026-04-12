@@ -9,7 +9,7 @@ class WhisperCppSTTService:
     def __init__(self) -> None:
         self.whisper_dir = Path.home() / "whisper.cpp"
         self.binary = self.whisper_dir / "build" / "bin" / "whisper-cli"
-        self.model = self.whisper_dir / "models" / "ggml-base.bin"
+        self.model = self.whisper_dir / "models" / "ggml-small.bin"
 
     def transcribe_file(self, audio_path: str, language: str = "es") -> str:
         if not self.binary.exists():

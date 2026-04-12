@@ -7,8 +7,15 @@ class ResponsePostProcessor:
 
         if intent == "draft_message":
             text = self._clean_draft_message(text, language)
+            text = self._shorten_if_needed(text)
 
         return text.strip()
+    
+    def _shorten_if_needed(self, text: str, max_chars: int = 500) -> str:
+        if len(text) <= max_chars:
+            return text
+
+        return text[:max_chars].rsplit(" ", 1)[0].strip() + "..."
 
     def _clean_draft_message(self, text: str, language: str) -> str:
         replacements = {

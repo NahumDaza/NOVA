@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import subprocess
 import tempfile
 from pathlib import Path
@@ -28,13 +29,33 @@ class XTTSService:
         return output_path
 
     def _prepare_text_for_tts(self, text: str) -> str:
-        replacements = {
-            "Nahum": "Naúm",
+        prepared = text.strip()
+
+        pronunciation_replacements = {
             "Nahum Daza": "Naúm Daza",
+            "Nahum": "Naúm",
+            "NOVA": "Nóva",
         }
 
-        prepared = text
-        for old, new in replacements.items():
+        for old, new in pronunciation_replacements.items():
             prepared = prepared.replace(old, new)
+
+        # quitar prefacios innecesarios para que suene más natural
+        prefixes = [
+            "Claro, aquí tienes un borrador del correo que puedes enviar a tu profesor:",
+            "Aquí tienes un borrador del correo:",
+            "Claro, aquí tienes el correo:",
+        ]
+        for prefix in prefixes:
+            prepared = prepared.replace(prefix, "").strip()
+
+        # simplificar puntuación que puede causar pausas raras
+        prepared = prepared.replace(":", ".")
+        prepared = prepared.replace(";", ".")
+        prepared = prepared.replace("...", ".")
+        prepared = prepared.replace("\n", " ")
+
+        # colapsar espacios
+        prepared = re.sub(r"\s+", " ", prepared).strip()
 
         return prepared

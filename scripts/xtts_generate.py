@@ -13,7 +13,7 @@ from TTS.api import TTS
 SPEAKER_WAV = "/Users/macuser/nova-audio/nova-reference.wav"
 
 
-def split_text(text: str, max_chars: int = 180) -> list[str]:
+def split_text(text: str, max_chars: int = 120) -> list[str]:
     text = re.sub(r"\s+", " ", text).strip()
 
     if len(text) <= max_chars:
@@ -24,17 +24,18 @@ def split_text(text: str, max_chars: int = 180) -> list[str]:
     current = ""
 
     for sentence in sentences:
-        if not sentence.strip():
+        sentence = sentence.strip()
+        if not sentence:
             continue
 
-        candidate = f"{current} {sentence}".strip() if current else sentence.strip()
+        candidate = f"{current} {sentence}".strip() if current else sentence
 
         if len(candidate) <= max_chars:
             current = candidate
         else:
             if current:
                 chunks.append(current)
-            current = sentence.strip()
+            current = sentence
 
     if current:
         chunks.append(current)
@@ -79,7 +80,7 @@ def main() -> int:
 
     tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
 
-    chunks = split_text(text, max_chars=180)
+    chunks = split_text(text, max_chars=120)
     temp_parts: list[str] = []
 
     try:

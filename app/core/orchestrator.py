@@ -57,6 +57,47 @@ class Orchestrator:
                     changed = True
 
         return cleaned
+    
+    def _is_simple_greeting_to_terra(self, message: str) -> bool:
+        text = message.lower()
+
+        greeting_words = [
+            "hola terra",
+            "hola, terra",
+            "buen día terra",
+            "buen dia terra",
+            "buenas tardes terra",
+            "buenas noches terra",
+            "qué tal",
+            "que tal",
+            "cómo vas",
+            "como vas",
+            "cómo estás",
+            "como estas",
+        ]
+
+        mentions_terra = "terra" in text
+        short_message = len(text.split()) <= 8
+
+        return mentions_terra and any(word in text for word in greeting_words) and short_message
+    
+    def _terra_greeting_response(self, conversation_id: str) -> tuple[str, str]:
+        state = self.terra_state.get(conversation_id)
+        greeting = self.persona.greeting_for_context(state)
+        state.last_greeting = greeting
+
+        response_options = [
+            "Estoy bien. ¿Cómo vas tú?",
+            "Todo en orden. ¿Cómo va tu día?",
+            "Aquí estoy. ¿En qué te ayudo?",
+            "Todo bien por aquí. ¿Qué necesitas?",
+        ]
+
+        import random
+        spoken = f"{greeting} {random.choice(response_options)}"
+        visual = spoken
+
+        return visual, spoken
 
     def _apply_terra_style(
         self,
@@ -108,6 +149,24 @@ class Orchestrator:
     ) -> dict:
         correction = self.english_coach.maybe_correct(message, language=language)
         intent = self.router.detect_intent(message)
+
+        if self._is_simple_greeting_to_terra(message):
+            response, spoken_response = self._terra_greeting_response(conversation_id)
+
+            if use_memory:
+                self.memory.add_user_message(conversation_id, message)
+                self.memory.add_assistant_message(conversation_id, response)
+
+            self.terra_state.touch(conversation_id)
+
+            return {
+                "intent": "general_chat",
+                "response": response,
+                "spoken_response": spoken_response,
+                "correction": correction,
+                "approval_required": False,
+                "conversation_id": conversation_id,
+            }
 
         if use_memory:
             self.memory.add_user_message(conversation_id, message)

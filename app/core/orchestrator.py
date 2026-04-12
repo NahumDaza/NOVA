@@ -117,9 +117,9 @@ class Orchestrator:
             state.last_confirmation = confirmation
             state.last_followup = followup
 
-            if followup:
-                return f"{confirmation} Preparé el correo para tu profesor. {followup}".strip()
+        if followup:
             return f"{confirmation} Preparé el correo para tu profesor.".strip()
+
 
         if intent == "refine_previous_output":
             confirmation = self.persona.confirmation(state)

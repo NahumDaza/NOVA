@@ -24,9 +24,9 @@ BLOCK_SIZE = int(SAMPLE_RATE * BLOCK_DURATION)
 
 START_THRESHOLD = 0.008   # sensibilidad de inicio
 SILENCE_THRESHOLD = 0.006 # sensibilidad de silencio
-MAX_SILENCE_SECONDS = 0.8
+MAX_SILENCE_SECONDS = 1.2
 MAX_RECORD_SECONDS = 10.0
-MIN_SPEECH_SECONDS = 0.5
+MIN_SPEECH_SECONDS = 0.7
 
 
 def rms(audio: np.ndarray) -> float:
@@ -156,7 +156,7 @@ def main() -> int:
                 if audio_path_out:
                     print("\nTERRA está respondiendo...")
                     play_audio(audio_path_out)
-                    time.sleep(0.5)
+                    time.sleep(0.25)
                 
                 print("\n--- SPOKEN RESPONSE ---")
                 print(spoken_response)

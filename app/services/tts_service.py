@@ -24,7 +24,7 @@ class XTTSService:
 
     def _make_spoken_version(self, text: str, intent: str | None = None) -> str:
         if intent == "draft_message":
-            return "Ya quedó listo. Preparé el correo para tu profesor. Lo ajusto si quieres."
+            return "Ya quedó listo el correo para tu profesor."
 
         if intent == "no_speech_detected":
             return "No te escuché con claridad. Intenta otra vez."

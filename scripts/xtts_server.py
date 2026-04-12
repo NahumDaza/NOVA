@@ -71,6 +71,14 @@ def prepare_text_for_speech(text: str) -> str:
     cleaned = cleaned.replace("!", ".")
     cleaned = re.sub(r"\[[^\]]+\]", "", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    cleaned = cleaned.replace(",", ".")
+    cleaned = cleaned.replace("  ", " ")
+    cleaned = cleaned.replace(" de ", " de ")
+    cleaned = cleaned.replace(" por un inconveniente personal.", " por un inconveniente personal")
+    cleaned = cleaned.replace(" Gracias por su comprensión.", " Gracias por su comprensión")
+    cleaned = cleaned.replace(" Le agradecería si me pudiera indicar", " Le agradecería que me indicara")
+    cleaned = cleaned.replace(" así como", " y también")
+    cleaned = cleaned.strip(" .")
 
     return cleaned
 
@@ -98,7 +106,7 @@ def synthesize(request: TTSRequest):
         "ffmpeg",
         "-y",
         "-i", output_path,
-        "-af", "apad=pad_dur=0.25",
+        "-af", "apad=pad_dur=0.25,volume=1.0",
         fixed_output
     ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 

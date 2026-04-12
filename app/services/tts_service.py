@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import httpx
 
+from app.core.terra_persona import TerraPersona
+
 
 class XTTSService:
     def __init__(self) -> None:
         self.base_url = "http://127.0.0.1:8010"
+        self.persona = TerraPersona()
 
     def synthesize(self, text: str, intent: str | None = None) -> str:
         spoken_version = self._make_spoken_version(text, intent)
@@ -24,10 +27,10 @@ class XTTSService:
 
     def _make_spoken_version(self, text: str, intent: str | None = None) -> str:
         if intent == "draft_message":
-            return "Ya quedó listo, jefe. Preparé el correo para tu profesor. Lo ajusto si quieres."
+            return self.persona.draft_message_voice_line()
 
         if intent == "no_speech_detected":
-            return "No te escuché con claridad. Intenta otra vez."
+            return self.persona.no_speech_line()
 
         cleaned = text.strip()
 

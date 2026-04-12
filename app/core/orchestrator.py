@@ -114,25 +114,13 @@ class Orchestrator:
 
         if intent == "draft_message":
             confirmation = self.persona.confirmation(state)
-            followup = self.persona.followup(state)
-
             state.last_confirmation = confirmation
-            state.last_followup = followup
-
-        if followup:
-            return f"{confirmation} Preparé el correo para tu profesor.".strip()
-
+            return f"{confirmation} Preparé el correo para tu profesor."
 
         if intent == "refine_previous_output":
             confirmation = self.persona.confirmation(state)
-            followup = self.persona.followup(state)
-
             state.last_confirmation = confirmation
-            state.last_followup = followup
-
-            if followup:
-                return f"{confirmation} Hice el ajuste. {followup}".strip()
-            return f"{confirmation} Hice el ajuste.".strip()
+            return f"{confirmation} Hice el ajuste."
 
         if intent == "general_chat":
             greeting = self.persona.greeting_for_context(state)
@@ -141,27 +129,41 @@ class Orchestrator:
             if base_response:
                 return f"{greeting} {base_response}".strip()
             return greeting
-        
+
         if intent == "summarize_text":
-            return "Listo. Ya preparé el resumen."
+            confirmation = self.persona.confirmation(state)
+            state.last_confirmation = confirmation
+            return f"{confirmation} Ya preparé el resumen."
 
         if intent == "translate_text":
-            return "Hecho. Ya dejé la traducción lista."
+            confirmation = self.persona.confirmation(state)
+            state.last_confirmation = confirmation
+            return f"{confirmation} Ya dejé la traducción lista."
 
         if intent == "rewrite_text":
-            return "En orden. Ya ajusté el texto."
-        
+            confirmation = self.persona.confirmation(state)
+            state.last_confirmation = confirmation
+            return f"{confirmation} Ya ajusté el texto."
+
         if intent == "open_app":
-            return "Listo."
+            confirmation = self.persona.confirmation(state)
+            state.last_confirmation = confirmation
+            return f"{confirmation} {base_response}".strip()
 
         if intent == "copy_text":
-            return "Listo. Lo copié."
+            confirmation = self.persona.confirmation(state)
+            state.last_confirmation = confirmation
+            return f"{confirmation} Lo copié."
 
         if intent == "save_note":
-            return "Listo. Guardé la nota."
+            confirmation = self.persona.confirmation(state)
+            state.last_confirmation = confirmation
+            return f"{confirmation} Guardé la nota en Notes."
 
         if intent == "save_task":
-            return "Hecho. Lo agregué."
+            confirmation = self.persona.confirmation(state)
+            state.last_confirmation = confirmation
+            return f"{confirmation} Guardé la tarea en Reminders."
 
         return base_response or response
 

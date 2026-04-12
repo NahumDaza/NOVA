@@ -106,7 +106,12 @@ class WhisperCppSTTService:
         replacements = {
             "Hola nueva": "Hola NOVA",
             "hola nueva": "Hola NOVA",
-            "Nova": "NOVA",
+            "Hola Nova": "Hola NOVA",
+            "hola Nova": "Hola NOVA",
+            "Hola no va": "Hola NOVA",
+            "hola no va": "Hola NOVA",
+            "No va": "NOVA",
+            "no va": "NOVA",
             "email": "correo",
             "clases": "clase",
         }

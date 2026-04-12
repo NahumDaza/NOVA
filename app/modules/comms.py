@@ -9,6 +9,11 @@ class CommsModule:
         self.llm = LLMService()
 
     def draft_message(self, message: str, language: str = "es") -> str:
+        text = message.lower()
+
+        if self._is_absence_to_teacher_case(text):
+            return self._draft_absence_to_teacher()
+
         response_language = "español" if language.startswith("es") else "English"
 
         prompt = (
@@ -19,6 +24,8 @@ class CommsModule:
             "- Entrega directamente el borrador.\n"
             "- Usa un tono apropiado al contexto.\n"
             "- Si faltan datos, asume una versión prudente y profesional.\n"
+            "- Evita placeholders innecesarios.\n"
+            "- Mantén la respuesta breve y lista para usar.\n"
             f"- Responde en {response_language}.\n"
         )
 
@@ -26,4 +33,26 @@ class CommsModule:
             system_prompt=prompt,
             user_message=message,
             history=[],
+        )
+
+    def _is_absence_to_teacher_case(self, text: str) -> bool:
+        teacher_words = ["profesor", "profesora", "teacher"]
+        absence_words = ["falté", "falte", "ausencia", "no pude asistir", "no asistí", "no asisti"]
+        class_words = ["clase", "curso", "materia"]
+
+        return (
+            any(word in text for word in teacher_words)
+            and any(word in text for word in absence_words)
+            and any(word in text for word in class_words)
+        )
+
+    def _draft_absence_to_teacher(self) -> str:
+        return (
+            "Asunto: Inasistencia a clase\n\n"
+            "Estimado profesor:\n\n"
+            "Le escribo para informarle que no pude asistir a una de sus clases por un inconveniente personal.\n\n"
+            "Le agradecería si me pudiera indicar el material visto, así como cualquier actividad o tarea que deba revisar para ponerme al día.\n\n"
+            "Gracias por su comprensión.\n\n"
+            "Atentamente,\n"
+            "Nahum Daza"
         )

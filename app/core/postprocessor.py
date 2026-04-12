@@ -29,6 +29,9 @@ class ResponsePostProcessor:
             "[Nombre de la Clase]": "clase",
             "[Fecha]": "",
             "[Tu Nombre]": "Nahum",
+            "Claro, aquí tienes un borrador del correo que puedes enviar a tu profesor:": "",
+            "Aquí tienes un borrador del correo:": "",
+            "Claro, aquí tienes el correo:": "",
         }
 
         cleaned = text

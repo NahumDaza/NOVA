@@ -8,6 +8,7 @@ from app.memory.history import ConversationMemory
 from app.services.llm_service import LLMService
 from app.core.postprocessor import ResponsePostProcessor
 from app.prompts.system_prompt import NOVA_SYSTEM_PROMPT
+from app.core.terra_persona import TerraPersona
 
 
 class Orchestrator:
@@ -21,43 +22,41 @@ class Orchestrator:
         self.memory = ConversationMemory()
         self.postprocessor = ResponsePostProcessor()
         self.llm = LLMService()
+        self.persona = TerraPersona()
 
-    def _apply_terra_style(self, intent: str, response: str) -> str:
+    def _apply_terra_style(
+        self,
+        intent: str,
+        response: str,
+        conversation_id: str,
+    ) -> str:
         import random
 
-        greetings = [
-            "Hola, Nahum.",
-            "Aquí estoy, jefe.",
-            "Todo en orden.",
-        ]
-
-        confirmations = [
-            "Hecho.",
-            "Ya quedó listo.",
-            "Listo.",
-            "En orden.",
-        ]
-
-        followups = [
-            "Lo ajusto si quieres.",
-            "Puedo afinarlo.",
-            "Lo adapto enseguida.",
-            "",
-        ]
-
         if intent == "draft_message":
-            prefix = random.choice(confirmations)
-            suffix = random.choice(followups)
-            return f"{prefix} Preparé el correo para tu profesor. {suffix}".strip()
+            options = [
+                "Ya quedó listo, jefe. Preparé el correo para tu profesor. Lo ajusto si quieres.",
+                "Hecho, Nahum. Ya preparé el correo para tu profesor. Puedo afinarlo.",
+                "En orden, jefe. El correo para tu profesor ya está preparado.",
+                "Listo, Nahum. Ya dejé preparado el correo para tu profesor.",
+            ]
+            return random.choice(options)
 
         if intent == "refine_previous_output":
-            prefix = random.choice(confirmations)
-            suffix = random.choice(followups)
-            return f"{prefix} Hice el ajuste. {suffix}".strip()
+            options = [
+                "Hecho. Ya apliqué el ajuste.",
+                "Listo. Ya hice el cambio.",
+                "En orden. Ya quedó ajustado.",
+            ]
+            return random.choice(options)
 
         if intent == "general_chat":
-            prefix = random.choice(greetings)
-            return f"{prefix} {response}".strip()
+            options = [
+                f"Hola, Nahum. {response}",
+                f"Aquí estoy, jefe. {response}",
+                f"Todo en orden, Nahum. {response}",
+                f"Bienvenido de nuevo, jefe. {response}",
+            ]
+            return random.choice(options)
 
         return response
 
@@ -130,6 +129,7 @@ class Orchestrator:
         spoken_response = self._apply_terra_style(
             intent=intent,
             response=response,
+            conversation_id=conversation_id,
         )
 
         if use_memory:

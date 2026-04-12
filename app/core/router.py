@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 
 
@@ -8,22 +10,84 @@ class IntentRouter:
         if self._is_refinement(text):
             return "refine_previous_output"
 
-        if self._match_any(text, ["draft", "email", "correo", "reply", "redacta", "escribe un correo", "redactar un correo"]):
+        if self._is_summary_request(text):
+            return "summarize_text"
+
+        if self._is_translation_request(text):
+            return "translate_text"
+
+        if self._is_rewrite_request(text):
+            return "rewrite_text"
+
+        if self._match_any(
+            text,
+            [
+                "draft",
+                "email",
+                "correo",
+                "reply",
+                "redacta",
+                "escribe un correo",
+                "redactar un correo",
+                "escribe un email",
+                "redacta un email",
+            ],
+        ):
             return "draft_message"
 
-        if self._match_any(text, ["organize", "organiza", "priorities", "pendientes", "organiza mi día"]):
+        if self._match_any(
+            text,
+            [
+                "organize",
+                "organiza",
+                "priorities",
+                "pendientes",
+                "organiza mi día",
+                "organiza mi dia",
+                "mi agenda",
+            ],
+        ):
             return "organize_day"
 
         if self._match_math(text):
             return "calculate_math"
 
-        if self._match_any(text, ["physics", "física", "velocity", "force", "aceleración", "velocidad"]):
+        if self._match_any(
+            text,
+            [
+                "physics",
+                "física",
+                "velocity",
+                "force",
+                "aceleración",
+                "velocidad",
+            ],
+        ):
             return "solve_physics"
 
-        if self._match_any(text, ["chemistry", "química", "molar", "reaction", "reacción"]):
+        if self._match_any(
+            text,
+            [
+                "chemistry",
+                "química",
+                "molar",
+                "reaction",
+                "reacción",
+            ],
+        ):
             return "solve_chemistry"
 
-        if self._match_any(text, ["process", "workflow", "estructura", "strategy", "proceso", "estrategia"]):
+        if self._match_any(
+            text,
+            [
+                "process",
+                "workflow",
+                "estructura",
+                "strategy",
+                "proceso",
+                "estrategia",
+            ],
+        ):
             return "think_process"
 
         if self._looks_like_english(text):
@@ -71,3 +135,51 @@ class IntentRouter:
             "translate it",
         ]
         return any(pattern in text for pattern in refinement_patterns)
+
+    def _is_summary_request(self, text: str) -> bool:
+        patterns = [
+            "resume esto",
+            "resúmelo",
+            "resumelo",
+            "hazme un resumen",
+            "haz un resumen",
+            "resúmeme",
+            "resumeme",
+            "summarize",
+            "summary",
+        ]
+        return any(pattern in text for pattern in patterns)
+
+    def _is_translation_request(self, text: str) -> bool:
+        patterns = [
+            "traduce esto",
+            "traducir esto",
+            "translate this",
+            "translate to english",
+            "translate to spanish",
+            "pásalo a inglés",
+            "pasalo a ingles",
+            "pásalo a español",
+            "pasalo a español",
+            "pásalo al inglés",
+            "pasalo al ingles",
+        ]
+        return any(pattern in text for pattern in patterns)
+
+    def _is_rewrite_request(self, text: str) -> bool:
+        patterns = [
+            "reescribe esto",
+            "reescríbelo",
+            "reescribelo",
+            "rewrite this",
+            "rephrase this",
+            "ponlo más profesional",
+            "ponlo mas profesional",
+            "hazlo más ejecutivo",
+            "hazlo mas ejecutivo",
+            "hazlo más casual",
+            "hazlo mas casual",
+            "hazlo más claro",
+            "hazlo mas claro",
+        ]
+        return any(pattern in text for pattern in patterns)

@@ -13,6 +13,7 @@ from app.services.english_coach import EnglishCoach
 from app.memory.history import ConversationMemory
 from app.services.llm_service import LLMService
 from app.core.postprocessor import ResponsePostProcessor
+from app.modules.text_tools import TextToolsModule
 from app.prompts.system_prompt import NOVA_SYSTEM_PROMPT
 
 
@@ -29,6 +30,7 @@ class Orchestrator:
         self.llm = LLMService()
         self.persona = TerraPersona()
         self.terra_state = TerraStateStore()
+        self.text_tools = TextToolsModule()
 
     def _strip_leading_greeting(self, text: str) -> str:
         cleaned = text.strip()
@@ -137,6 +139,15 @@ class Orchestrator:
             if base_response:
                 return f"{greeting} {base_response}".strip()
             return greeting
+        
+        if intent == "summarize_text":
+            return "Listo. Ya preparé el resumen."
+
+        if intent == "translate_text":
+            return "Hecho. Ya dejé la traducción lista."
+
+        if intent == "rewrite_text":
+            return "En orden. Ya ajusté el texto."
 
         return base_response or response
 
@@ -210,6 +221,15 @@ class Orchestrator:
                 "No veo un error importante en tu inglés. "
                 "Envíame la frase y te la corrijo o mejoro."
             )
+
+        elif intent == "summarize_text":
+            response = self.text_tools.summarize(message=message, language=language)
+
+        elif intent == "translate_text":
+            response = self.text_tools.translate(message=message, language=language)
+
+        elif intent == "rewrite_text":
+            response = self.text_tools.rewrite(message=message, language=language)
 
         else:
             response = self.llm.generate(

@@ -1,4 +1,10 @@
+from __future__ import annotations
+
+import re
+
 from app.core.router import IntentRouter
+from app.core.terra_persona import TerraPersona
+from app.core.terra_state import TerraStateStore
 from app.modules.comms import CommsModule
 from app.modules.logic import LogicModule
 from app.modules.strategy import StrategyModule
@@ -8,7 +14,6 @@ from app.memory.history import ConversationMemory
 from app.services.llm_service import LLMService
 from app.core.postprocessor import ResponsePostProcessor
 from app.prompts.system_prompt import NOVA_SYSTEM_PROMPT
-from app.core.terra_persona import TerraPersona
 
 
 class Orchestrator:
@@ -23,6 +28,35 @@ class Orchestrator:
         self.postprocessor = ResponsePostProcessor()
         self.llm = LLMService()
         self.persona = TerraPersona()
+        self.terra_state = TerraStateStore()
+
+    def _strip_leading_greeting(self, text: str) -> str:
+        cleaned = text.strip()
+
+        patterns = [
+            r"^\s*[¡!]*\s*hola\s*,?\s*nahum\s*[!,.:\-\s]*",
+            r"^\s*[¡!]*\s*hola\s*,?\s*jefe\s*[!,.:\-\s]*",
+            r"^\s*[¡!]*\s*hola\s*,?\s*terra\s*[!,.:\-\s]*",
+            r"^\s*[¡!]*\s*hola\s*[!,.:\-\s]*",
+            r"^\s*buenos\s+d[ií]as\s*,?\s*nahum\s*[!,.:\-\s]*",
+            r"^\s*buenas\s+tardes\s*,?\s*nahum\s*[!,.:\-\s]*",
+            r"^\s*buenas\s+noches\s*,?\s*nahum\s*[!,.:\-\s]*",
+            r"^\s*bienvenido\s+de\s+nuevo\s*,?\s*nahum\s*[!,.:\-\s]*",
+            r"^\s*bienvenido\s+de\s+nuevo\s*,?\s*jefe\s*[!,.:\-\s]*",
+            r"^\s*aqu[ií]\s+estoy\s*,?\s*jefe\s*[!,.:\-\s]*",
+            r"^\s*todo\s+en\s+orden\s*,?\s*(nahum|jefe)?\s*[!,.:\-\s]*",
+        ]
+
+        changed = True
+        while changed:
+            changed = False
+            for pattern in patterns:
+                new_cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE).strip()
+                if new_cleaned != cleaned:
+                    cleaned = new_cleaned
+                    changed = True
+
+        return cleaned
 
     def _apply_terra_style(
         self,
@@ -30,35 +64,40 @@ class Orchestrator:
         response: str,
         conversation_id: str,
     ) -> str:
-        import random
+        state = self.terra_state.get(conversation_id)
+        base_response = self._strip_leading_greeting(response)
 
         if intent == "draft_message":
-            options = [
-                "Ya quedó listo, jefe. Preparé el correo para tu profesor. Lo ajusto si quieres.",
-                "Hecho, Nahum. Ya preparé el correo para tu profesor. Puedo afinarlo.",
-                "En orden, jefe. El correo para tu profesor ya está preparado.",
-                "Listo, Nahum. Ya dejé preparado el correo para tu profesor.",
-            ]
-            return random.choice(options)
+            confirmation = self.persona.confirmation(state)
+            followup = self.persona.followup(state)
+
+            state.last_confirmation = confirmation
+            state.last_followup = followup
+
+            if followup:
+                return f"{confirmation} Preparé el correo para tu profesor. {followup}".strip()
+            return f"{confirmation} Preparé el correo para tu profesor.".strip()
 
         if intent == "refine_previous_output":
-            options = [
-                "Hecho. Ya apliqué el ajuste.",
-                "Listo. Ya hice el cambio.",
-                "En orden. Ya quedó ajustado.",
-            ]
-            return random.choice(options)
+            confirmation = self.persona.confirmation(state)
+            followup = self.persona.followup(state)
+
+            state.last_confirmation = confirmation
+            state.last_followup = followup
+
+            if followup:
+                return f"{confirmation} Hice el ajuste. {followup}".strip()
+            return f"{confirmation} Hice el ajuste.".strip()
 
         if intent == "general_chat":
-            options = [
-                f"Hola, Nahum. {response}",
-                f"Aquí estoy, jefe. {response}",
-                f"Todo en orden, Nahum. {response}",
-                f"Bienvenido de nuevo, jefe. {response}",
-            ]
-            return random.choice(options)
+            greeting = self.persona.greeting_for_context(state)
+            state.last_greeting = greeting
 
-        return response
+            if base_response:
+                return f"{greeting} {base_response}".strip()
+            return greeting
+
+        return base_response or response
 
     def handle(
         self,
@@ -144,6 +183,8 @@ class Orchestrator:
                     last_artifact.get("type", "text"),
                     response,
                 )
+
+        self.terra_state.touch(conversation_id)
 
         return {
             "intent": intent,

@@ -1,19 +1,45 @@
 from __future__ import annotations
 
 import random
+from datetime import datetime
 from typing import Optional
+
+from app.core.terra_state import TerraConversationState
 
 
 class TerraPersona:
     def __init__(self) -> None:
-        self.greetings = [
+        self.morning_greetings = [
+            "Buenos días, Nahum.",
+            "Buenos días, jefe.",
+            "Buen día, Nahum.",
+        ]
+
+        self.afternoon_greetings = [
+            "Buenas tardes, Nahum.",
+            "Buenas tardes, jefe.",
             "Hola, Nahum.",
+        ]
+
+        self.evening_greetings = [
+            "Buenas noches, Nahum.",
+            "Buenas noches, jefe.",
+            "Hola, Nahum.",
+        ]
+
+        self.return_greetings = [
             "Bienvenido de nuevo, Nahum.",
+            "Bienvenido de nuevo, jefe.",
+            "De vuelta, Nahum.",
+            "Qué bueno tenerte de regreso, jefe.",
+        ]
+
+        self.neutral_greetings = [
+            "Aquí estoy, Nahum.",
             "Aquí estoy, jefe.",
+            "Todo en orden, Nahum.",
             "Todo en orden, jefe.",
-            "Buen regreso, Nahum.",
-            "Hola, jefe.",
-            "En orden, Nahum.",
+            "Listo, Nahum.",
         ]
 
         self.confirmations = [
@@ -25,7 +51,7 @@ class TerraPersona:
             "Lo tengo.",
         ]
 
-        self.follow_ups = [
+        self.followups = [
             "Lo ajusto si quieres.",
             "Puedo afinarlo.",
             "Lo adapto enseguida.",
@@ -39,27 +65,26 @@ class TerraPersona:
             candidates = options
         return random.choice(candidates)
 
-    def greeting(self, last_used: Optional[str] = None) -> str:
-        return self._pick_different(self.greetings, last_used)
+    def greeting_for_context(self, state: TerraConversationState) -> str:
+        now = datetime.now()
+        hour = now.hour
 
-    def confirmation(self, last_used: Optional[str] = None) -> str:
-        return self._pick_different(self.confirmations, last_used)
+        if state.last_interaction_at is not None:
+            seconds_away = (now - state.last_interaction_at).total_seconds()
+            if seconds_away >= 180:
+                return self._pick_different(self.return_greetings, state.last_greeting)
 
-    def follow_up(self, last_used: Optional[str] = None) -> str:
-        return self._pick_different(self.follow_ups, last_used)
+        if hour < 12:
+            return self._pick_different(self.morning_greetings, state.last_greeting)
+        if hour < 19:
+            return self._pick_different(self.afternoon_greetings, state.last_greeting)
+        return self._pick_different(self.evening_greetings, state.last_greeting)
 
-    def draft_message_voice_line(
-        self,
-        last_confirmation: Optional[str] = None,
-        last_follow_up: Optional[str] = None,
-    ) -> str:
-        confirmation = self.confirmation(last_confirmation)
-        follow_up = self.follow_up(last_follow_up)
+    def neutral_greeting(self, state: TerraConversationState) -> str:
+        return self._pick_different(self.neutral_greetings, state.last_greeting)
 
-        if follow_up:
-            return f"{confirmation} Preparé el correo para tu profesor. {follow_up}".strip()
+    def confirmation(self, state: TerraConversationState) -> str:
+        return self._pick_different(self.confirmations, state.last_confirmation)
 
-        return f"{confirmation} Preparé el correo para tu profesor.".strip()
-
-    def no_speech_line(self) -> str:
-        return "No te escuché con claridad. Intenta otra vez."
+    def followup(self, state: TerraConversationState) -> str:
+        return self._pick_different(self.followups, state.last_followup)

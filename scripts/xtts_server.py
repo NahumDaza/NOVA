@@ -14,7 +14,7 @@ os.environ["COQUI_TOS_AGREED"] = "1"
 
 app = FastAPI(title="NOVA XTTS Server")
 
-SPEAKER_WAV = "/Users/macuser/nova-audio/nova-reference.wav"
+SPEAKER_WAV = "/Users/macuser/nova-audio/nova-voice-v2.wav"
 AUDIO_DIR = Path("/Users/macuser/nova-audio")
 AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -59,6 +59,17 @@ def prepare_text_for_speech(text: str) -> str:
     cleaned = cleaned.replace("\n", " ")
 
     # quitar dobles espacios
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+
+    cleaned = cleaned.replace("Asunto", "")
+    cleaned = cleaned.replace("Atentamente", "")
+    cleaned = cleaned.replace("...", ".")
+    cleaned = cleaned.replace("..", ".")
+    cleaned = cleaned.replace("¿", "")
+    cleaned = cleaned.replace("?", ".")
+    cleaned = cleaned.replace("¡", "")
+    cleaned = cleaned.replace("!", ".")
+    cleaned = re.sub(r"\[[^\]]+\]", "", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
 
     return cleaned

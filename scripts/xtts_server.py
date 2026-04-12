@@ -33,9 +33,11 @@ def prepare_text_for_speech(text: str) -> str:
     replacements = {
         "Nahum Daza": "NaúmDaza",
         "Nahum": "Naúm",
-        "NOVA": "Nóva",
+        "NOVA": "Terra",
+        "Nóva": "Terra",
+        "TERRA": "Terra",
         "Odoo": "Odú",
-        "Climasync": "Clima Sync",
+        "Climasync": "Clima Sainc",
     }
 
     for old, new in replacements.items():
@@ -80,6 +82,14 @@ def prepare_text_for_speech(text: str) -> str:
     cleaned = cleaned.replace(" así como", " y también")
     cleaned = cleaned.strip(" .")
     cleaned = cleaned.replace("Hola, hola", "Hola")
+    cleaned = cleaned.replace("TERRA", "Terra")
+    
+    cleaned = cleaned.replace("terra", "Terra")
+    # para voz conversacional corta, evitar pausas raras en puntos
+    cleaned = cleaned.replace(". ", ", ")
+    cleaned = cleaned.replace(".", "")
+    cleaned = cleaned.replace(", ,", ",")
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
 
     # corregir frases muy cortas de saludo que XTTS suele pronunciar raro
     if cleaned.lower() in {"hola. soy nóva", "hola. soy nova", "hola soy nova", "hola, soy nova"}:
@@ -100,7 +110,7 @@ def prepare_text_for_speech(text: str) -> str:
     for old, new in greeting_replacements.items():
         cleaned = cleaned.replace(old, new)
 
-        
+
 
     return cleaned
 

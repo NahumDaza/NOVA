@@ -79,6 +79,11 @@ def prepare_text_for_speech(text: str) -> str:
     cleaned = cleaned.replace(" Le agradecería si me pudiera indicar", " Le agradecería que me indicara")
     cleaned = cleaned.replace(" así como", " y también")
     cleaned = cleaned.strip(" .")
+    cleaned = cleaned.replace("Hola, hola", "Hola")
+
+    # corregir frases muy cortas de saludo que XTTS suele pronunciar raro
+    if cleaned.lower() in {"hola. soy nóva", "hola. soy nova", "hola soy nova", "hola, soy nova"}:
+        cleaned = "Soy Nóva."
 
     return cleaned
 

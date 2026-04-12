@@ -78,4 +78,17 @@ def synthesize(request: TTSRequest):
         split_sentences=True,
     )
 
-    return {"audio_path": output_path}
+    # agregar pequeño silencio al final 
+    import subprocess
+
+    fixed_output = output_path.replace(".wav", "_fixed.wav")
+
+    subprocess.run([
+        "ffmpeg",
+        "-y",
+        "-i", output_path,
+        "-af", "apad=pad_dur=0.3",
+        fixed_output
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    return {"audio_path": fixed_output}

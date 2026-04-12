@@ -136,7 +136,7 @@ async def respond_with_audio(
         )
 
         audio_path = tts.synthesize(result["response"], intent=result["intent"])
-        subprocess.Popen(["afplay", audio_path])
+        subprocess.Popen(["afplay", "-q", "1", audio_path])
 
         return {
             "transcript": transcript,

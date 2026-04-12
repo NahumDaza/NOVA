@@ -14,6 +14,7 @@ from app.memory.history import ConversationMemory
 from app.services.llm_service import LLMService
 from app.core.postprocessor import ResponsePostProcessor
 from app.modules.text_tools import TextToolsModule
+from app.modules.system_actions import SystemActionsModule
 from app.prompts.system_prompt import NOVA_SYSTEM_PROMPT
 
 
@@ -31,6 +32,7 @@ class Orchestrator:
         self.persona = TerraPersona()
         self.terra_state = TerraStateStore()
         self.text_tools = TextToolsModule()
+        self.system = SystemActionsModule()
 
     def _strip_leading_greeting(self, text: str) -> str:
         cleaned = text.strip()
@@ -148,6 +150,18 @@ class Orchestrator:
 
         if intent == "rewrite_text":
             return "En orden. Ya ajusté el texto."
+        
+        if intent == "open_app":
+            return "Listo."
+
+        if intent == "copy_text":
+            return "Listo. Lo copié."
+
+        if intent == "save_note":
+            return "Listo. Guardé la nota."
+
+        if intent == "save_task":
+            return "Hecho. Lo agregué."
 
         return base_response or response
 
@@ -192,6 +206,21 @@ class Orchestrator:
         if intent == "organize_day":
             response = self.work.organize_day(message)
 
+        elif intent == "open_app":
+            response = self.system.open_app(message)
+
+        elif intent == "copy_text":
+            if last_artifact and last_artifact.get("content"):
+                response = self.system.copy_to_clipboard(last_artifact["content"])
+            else:
+                response = "No tengo nada reciente para copiar."
+
+        elif intent == "save_note":
+            response = self.system.save_note(message)
+
+        elif intent == "save_task":
+            response = self.system.save_task(message)
+
         elif intent == "draft_message":
             response = self.comms.draft_message(message=message, language=language)
             approval_required = True
@@ -230,6 +259,8 @@ class Orchestrator:
 
         elif intent == "rewrite_text":
             response = self.text_tools.rewrite(message=message, language=language)
+
+    
 
         else:
             response = self.llm.generate(

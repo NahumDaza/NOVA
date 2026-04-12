@@ -18,6 +18,18 @@ class IntentRouter:
 
         if self._is_rewrite_request(text):
             return "rewrite_text"
+        
+        if self._match_any(text, ["abre", "open", "abrir"]):
+            return "open_app"
+
+        if self._match_any(text, ["copia", "copiar", "copy"]):
+            return "copy_text"
+
+        if self._match_any(text, ["nota", "guardar nota", "take note"]):
+            return "save_note"
+
+        if self._match_any(text, ["tarea", "recordatorio", "todo"]):
+            return "save_task"
 
         if self._match_any(
             text,

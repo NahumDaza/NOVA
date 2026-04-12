@@ -1,61 +1,37 @@
 from __future__ import annotations
 
-import re
-import subprocess
-import tempfile
-from pathlib import Path
+import httpx
 
 
 class XTTSService:
     def __init__(self) -> None:
-        self.python_bin = "/Users/macuser/nova-xtts-venv-arm/bin/python"
-        self.script_path = "/Users/macuser/NOVA/scripts/xtts_generate.py"
-        self.audio_dir = Path("/Users/macuser/nova-audio")
-        self.audio_dir.mkdir(parents=True, exist_ok=True)
+        self.base_url = "http://127.0.0.1:8010"
 
     def synthesize(self, text: str) -> str:
-        spoken_text = self._prepare_text_for_tts(text)
+        spoken_version = self._make_spoken_version(text)
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir=self.audio_dir) as tmp:
-            output_path = tmp.name
-
-        subprocess.run(
-            [self.python_bin, self.script_path, spoken_text, output_path],
-            capture_output=True,
-            text=True,
-            check=True,
+        response = httpx.post(
+            f"{self.base_url}/synthesize",
+            json={
+                "text": spoken_version,
+                "language": "es",
+            },
+            timeout=300.0,
         )
+        response.raise_for_status()
+        data = response.json()
+        return data["audio_path"]
 
-        return output_path
+    def _make_spoken_version(self, text: str) -> str:
+        cleaned = text.strip()
 
-    def _prepare_text_for_tts(self, text: str) -> str:
-        prepared = text.strip()
+        if "Asunto:" in cleaned and "Atentamente" in cleaned:
+            return (
+                "Listo. Ya preparé el correo. "
+                "Si quieres, puedo hacerlo más breve, más formal o traducirlo."
+            )
 
-        pronunciation_replacements = {
-            "Nahum Daza": "Naúm Daza",
-            "Nahum": "Naúm",
-            "NOVA": "Nóva",
-        }
+        if len(cleaned) > 280:
+            return cleaned[:280].rsplit(" ", 1)[0].strip() + "."
 
-        for old, new in pronunciation_replacements.items():
-            prepared = prepared.replace(old, new)
-
-        # quitar prefacios innecesarios para que suene más natural
-        prefixes = [
-            "Claro, aquí tienes un borrador del correo que puedes enviar a tu profesor:",
-            "Aquí tienes un borrador del correo:",
-            "Claro, aquí tienes el correo:",
-        ]
-        for prefix in prefixes:
-            prepared = prepared.replace(prefix, "").strip()
-
-        # simplificar puntuación que puede causar pausas raras
-        prepared = prepared.replace(":", ".")
-        prepared = prepared.replace(";", ".")
-        prepared = prepared.replace("...", ".")
-        prepared = prepared.replace("\n", " ")
-
-        # colapsar espacios
-        prepared = re.sub(r"\s+", " ", prepared).strip()
-
-        return prepared
+        return cleaned

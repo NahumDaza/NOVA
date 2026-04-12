@@ -20,11 +20,15 @@ def record_audio() -> str:
 
     print("Grabando... presiona ENTER para detener.")
 
+    audio_device_index = "1"  # MacBook Pro Microphone
+
     cmd = [
         "ffmpeg",
         "-y",
         "-f", "avfoundation",
-        "-i", ":0",
+        "-i", f":{audio_device_index}",
+        "-ac", "1",
+        "-ar", "16000",
         "-c:a", "aac",
         output_path,
     ]

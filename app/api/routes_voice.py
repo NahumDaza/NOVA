@@ -10,7 +10,7 @@ from app.services.tts_service import XTTSService
 router = APIRouter()
 stt = WhisperCppSTTService()
 orchestrator = Orchestrator()
-
+tts = XTTSService()
 
 
 class VoiceRespondRequest(BaseModel):
@@ -69,7 +69,17 @@ async def respond_from_audio(
             suffix = "." + file.filename.split(".")[-1].lower()
 
         temp_path = stt.save_temp_audio(audio_bytes, suffix=suffix)
-        transcript = stt.transcribe_file(temp_path, language=language)
+        transcript = stt.transcribe_file(temp_path, language=language).strip()
+
+        if not transcript:
+            return {
+                "transcript": "",
+                "intent": "no_speech_detected",
+                "response": "No detecté voz con suficiente claridad. Intenta hablar un poco más cerca del micrófono.",
+                "correction": None,
+                "approval_required": False,
+                "conversation_id": conversation_id,
+            }
 
         result = orchestrator.handle(
             message=transcript,
@@ -88,10 +98,6 @@ async def respond_from_audio(
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-    
-
-
-tts = XTTSService()
 
 
 @router.post("/respond-with-audio")
@@ -109,7 +115,18 @@ async def respond_with_audio(
             suffix = "." + file.filename.split(".")[-1].lower()
 
         temp_path = stt.save_temp_audio(audio_bytes, suffix=suffix)
-        transcript = stt.transcribe_file(temp_path, language=language)
+        transcript = stt.transcribe_file(temp_path, language=language).strip()
+
+        if not transcript:
+            return {
+                "transcript": "",
+                "intent": "no_speech_detected",
+                "response": "No detecté voz con suficiente claridad. Intenta hablar un poco más cerca del micrófono.",
+                "correction": None,
+                "approval_required": False,
+                "conversation_id": conversation_id,
+                "audio_path": None,
+            }
 
         result = orchestrator.handle(
             message=transcript,

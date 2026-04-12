@@ -22,6 +22,7 @@ def main() -> int:
         speaker_wav="/Users/macuser/nova-audio/nova-reference.wav",
         file_path=output_path,
         language="es",
+        split_sentences=False,
     )
 
     print(output_path)

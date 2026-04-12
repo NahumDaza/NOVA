@@ -88,14 +88,29 @@ class WhisperCppSTTService:
         return self._postprocess_text(stdout.strip())
 
     def _postprocess_text(self, text: str) -> str:
+        cleaned = text.strip()
+
+        noise_markers = {
+            "[MÚSICA]",
+            "[Música]",
+            "[MUSICA]",
+            "[Music]",
+            "[SONIDO]",
+            "[Noise]",
+            "[Aplausos]",
+        }
+
+        if cleaned in noise_markers:
+            return ""
+
         replacements = {
             "Hola nueva": "Hola NOVA",
             "hola nueva": "Hola NOVA",
+            "Nova": "NOVA",
             "email": "correo",
             "clases": "clase",
         }
 
-        cleaned = text.strip()
         for old, new in replacements.items():
             cleaned = cleaned.replace(old, new)
 

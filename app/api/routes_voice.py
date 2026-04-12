@@ -106,6 +106,7 @@ async def respond_with_audio(
     language: str = "es",
     conversation_id: str = "default",
     use_memory: bool = True,
+    autoplay: bool = True,
 ):
     try:
         audio_bytes = await file.read()
@@ -135,13 +136,17 @@ async def respond_with_audio(
             use_memory=use_memory,
         )
 
-        audio_path = tts.synthesize(result["response"], intent=result["intent"])
-        subprocess.Popen(["afplay", "-q", "1", audio_path])
+        audio_source = result.get("spoken_response") or result["response"]
+        audio_path = tts.synthesize(audio_source, intent=result["intent"])
+
+        if autoplay and audio_path:
+            subprocess.Popen(["afplay", "-q", "1", audio_path])
 
         return {
             "transcript": transcript,
             "intent": result["intent"],
             "response": result["response"],
+            "spoken_response": result.get("spoken_response"),
             "correction": result["correction"],
             "approval_required": result["approval_required"],
             "conversation_id": result["conversation_id"],

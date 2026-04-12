@@ -22,6 +22,45 @@ class Orchestrator:
         self.postprocessor = ResponsePostProcessor()
         self.llm = LLMService()
 
+    def _apply_terra_style(self, intent: str, response: str) -> str:
+        import random
+
+        greetings = [
+            "Hola, Nahum.",
+            "Aquí estoy, jefe.",
+            "Todo en orden.",
+        ]
+
+        confirmations = [
+            "Hecho.",
+            "Ya quedó listo.",
+            "Listo.",
+            "En orden.",
+        ]
+
+        followups = [
+            "Lo ajusto si quieres.",
+            "Puedo afinarlo.",
+            "Lo adapto enseguida.",
+            "",
+        ]
+
+        if intent == "draft_message":
+            prefix = random.choice(confirmations)
+            suffix = random.choice(followups)
+            return f"{prefix} Preparé el correo para tu profesor. {suffix}".strip()
+
+        if intent == "refine_previous_output":
+            prefix = random.choice(confirmations)
+            suffix = random.choice(followups)
+            return f"{prefix} Hice el ajuste. {suffix}".strip()
+
+        if intent == "general_chat":
+            prefix = random.choice(greetings)
+            return f"{prefix} {response}".strip()
+
+        return response
+
     def handle(
         self,
         message: str,
@@ -88,6 +127,11 @@ class Orchestrator:
             language=language,
         )
 
+        spoken_response = self._apply_terra_style(
+            intent=intent,
+            response=response,
+        )
+
         if use_memory:
             self.memory.add_assistant_message(conversation_id, response)
 
@@ -104,6 +148,7 @@ class Orchestrator:
         return {
             "intent": intent,
             "response": response,
+            "spoken_response": spoken_response,
             "correction": correction,
             "approval_required": approval_required,
             "conversation_id": conversation_id,

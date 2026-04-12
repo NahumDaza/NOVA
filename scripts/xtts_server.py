@@ -106,7 +106,7 @@ def synthesize(request: TTSRequest):
         "ffmpeg",
         "-y",
         "-i", output_path,
-        "-af", "apad=pad_dur=0.25,volume=1.0",
+        "-af", "apad=pad_dur=0.25,highpass=f=80,lowpass=f=8000",
         fixed_output
     ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 

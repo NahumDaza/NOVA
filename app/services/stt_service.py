@@ -110,12 +110,15 @@ class WhisperCppSTTService:
             "hola Nova": "Hola NOVA",
             "Hola no va": "Hola NOVA",
             "hola no va": "Hola NOVA",
+            "NOVAs": "NOVA",
+            "Nova s": "NOVA",
             "No va": "NOVA",
             "no va": "NOVA",
             "email": "correo",
             "clases": "clase",
+            "falta clase": "falté a clase",
+            "porque falta clase": "porque falté a clase",
             "redacto un correo": "redacta un correo",
-            "porque va al teclas": "porque falté a clase",
         }
 
         for old, new in replacements.items():

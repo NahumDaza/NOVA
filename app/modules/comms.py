@@ -37,7 +37,11 @@ class CommsModule:
 
     def _is_absence_to_teacher_case(self, text: str) -> bool:
         teacher_words = ["profesor", "profesora", "teacher"]
-        absence_words = ["falté", "falte", "ausencia", "no pude asistir", "no asistí", "no asisti"]
+        absence_words = [
+            "falté", "falte", "ausencia", "no pude asistir", "no asistí",
+            "no asisti", "perdí la clase", "perdi la clase", "me perdí la clase",
+            "me perdi la clase", "falté a clase", "falte a clase"
+        ]
         class_words = ["clase", "curso", "materia"]
 
         return (

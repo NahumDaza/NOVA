@@ -37,17 +37,24 @@ class CommsModule:
 
     def _is_absence_to_teacher_case(self, text: str) -> bool:
         teacher_words = ["profesor", "profesora", "teacher"]
-        absence_words = [
-            "falté", "falte", "ausencia", "no pude asistir", "no asistí",
-            "no asisti", "perdí la clase", "perdi la clase", "me perdí la clase",
-            "me perdi la clase", "falté a clase", "falte a clase"
-        ]
         class_words = ["clase", "curso", "materia"]
+        mail_words = ["correo", "email", "mail", "redacta", "redactar"]
+
+        absence_signals = [
+            "falté", "falte", "faltar", "falté a clase", "falte a clase",
+            "no pude asistir", "no asistí", "no asisti",
+            "perdí la clase", "perdi la clase", "me perdí la clase", "me perdi la clase",
+            "inasistencia", "ausencia",
+        ]
 
         return (
             any(word in text for word in teacher_words)
-            and any(word in text for word in absence_words)
             and any(word in text for word in class_words)
+            and (
+                any(word in text for word in absence_signals)
+                or ("correo" in text and "profesor" in text and "clase" in text)
+                or any(word in text for word in mail_words)
+            )
         )
 
     def _draft_absence_to_teacher(self) -> str:

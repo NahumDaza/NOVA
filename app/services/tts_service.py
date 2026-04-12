@@ -24,18 +24,14 @@ class XTTSService:
 
     def _make_spoken_version(self, text: str, intent: str | None = None) -> str:
         if intent == "draft_message":
-            return (
-                "Listo. Ya preparé un correo breve para tu profesor informando que no pudiste asistir a clase "
-                "y solicitando el material para ponerte al día. "
-                "Si quieres, ahora lo hago más formal, más corto o lo traduzco."
-            )
+            return "Ya quedó listo. Preparé el correo para tu profesor. Lo ajusto si quieres."
 
         if intent == "no_speech_detected":
-            return "No detecté tu voz con suficiente claridad. Intenta hablar un poco más cerca del micrófono."
+            return "No te escuché con claridad. Intenta otra vez."
 
         cleaned = text.strip()
 
-        if len(cleaned) > 220:
-            cleaned = cleaned[:220].rsplit(" ", 1)[0].strip() + "."
+        if len(cleaned) > 160:
+            cleaned = cleaned[:160].rsplit(" ", 1)[0].strip() + "."
 
         return cleaned

@@ -85,6 +85,23 @@ def prepare_text_for_speech(text: str) -> str:
     if cleaned.lower() in {"hola. soy nóva", "hola. soy nova", "hola soy nova", "hola, soy nova"}:
         cleaned = "Soy Nóva."
 
+    # evitar glitches comunes con saludos que empiezan por "Hola"
+    greeting_replacements = {
+        "Hola, soy NOVA con mi nueva voz": "Soy Nóva con mi nueva voz",
+        "Hola. soy NOVA con mi nueva voz": "Soy Nóva con mi nueva voz",
+        "Hola. Soy NOVA con mi nueva voz": "Soy Nóva con mi nueva voz",
+        "Hola, soy NOVA.": "Soy Nóva.",
+        "Hola. Soy NOVA.": "Soy Nóva.",
+        "Hola. soy NOVA.": "Soy Nóva.",
+        "Hola, soy NOVA": "Soy Nóva",
+        "Hola. Soy NOVA": "Soy Nóva",
+    }
+
+    for old, new in greeting_replacements.items():
+        cleaned = cleaned.replace(old, new)
+
+        
+
     return cleaned
 
 

@@ -20,6 +20,8 @@ class IntentRouter:
             return "rewrite_text"
         
         if self._match_any(text, ["abre", "open", "abrir"]):
+            if any(x in text for x in ["archivo", ".pdf", ".doc", ".docx", ".txt", ".xlsx", ".pptx"]):
+                return "open_file"
             return "open_app"
 
         if self._match_any(text, ["copia", "copiar", "copy"]):
@@ -30,6 +32,15 @@ class IntentRouter:
 
         if self._match_any(text, ["tarea", "recordatorio", "todo"]):
             return "save_task"
+        
+        if self._match_any(text, ["abre descargas", "abre documentos", "abre escritorio", "abre proyectos", "abre mi carpeta"]):
+            return "open_folder"
+
+        if self._match_any(text, ["busca archivo", "busca el archivo", "encuentra archivo", "encuentra el archivo", "busca pdf", "busca documento"]):
+            return "find_file"
+
+        if self._match_any(text, ["abre el último archivo encontrado", "abre el ultimo archivo encontrado", "abre el archivo encontrado"]):
+            return "open_found_file"
 
         if self._match_any(
             text,

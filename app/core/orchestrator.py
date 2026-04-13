@@ -15,6 +15,7 @@ from app.services.llm_service import LLMService
 from app.core.postprocessor import ResponsePostProcessor
 from app.modules.text_tools import TextToolsModule
 from app.modules.system_actions import SystemActionsModule
+from app.modules.file_actions import FileActionsModule
 from app.prompts.system_prompt import NOVA_SYSTEM_PROMPT
 
 
@@ -33,6 +34,7 @@ class Orchestrator:
         self.terra_state = TerraStateStore()
         self.text_tools = TextToolsModule()
         self.system = SystemActionsModule()
+        self.files = FileActionsModule()
 
     def _strip_leading_greeting(self, text: str) -> str:
         cleaned = text.strip()
@@ -164,6 +166,26 @@ class Orchestrator:
             confirmation = self.persona.confirmation(state)
             state.last_confirmation = confirmation
             return f"{confirmation} Guardé la tarea en Reminders."
+        
+        if intent == "open_folder":
+            confirmation = self.persona.confirmation(state)
+            state.last_confirmation = confirmation
+            return f"{confirmation} {base_response}".strip()
+
+        if intent == "find_file":
+            confirmation = self.persona.confirmation(state)
+            state.last_confirmation = confirmation
+            return f"{confirmation} {base_response}".strip()
+
+        if intent == "open_found_file":
+            confirmation = self.persona.confirmation(state)
+            state.last_confirmation = confirmation
+            return f"{confirmation} {base_response}".strip()
+
+        if intent == "open_file":
+            confirmation = self.persona.confirmation(state)
+            state.last_confirmation = confirmation
+            return f"{confirmation} {base_response}".strip()
 
         return base_response or response
 
@@ -222,6 +244,18 @@ class Orchestrator:
 
         elif intent == "save_task":
             response = self.system.save_task(message)
+
+        elif intent == "open_folder":
+            response = self.files.open_folder(message)
+
+        elif intent == "find_file":
+            response = self.files.find_file(message)
+
+        elif intent == "open_found_file":
+            response = self.files.open_found_file()
+
+        elif intent == "open_file":
+            response = self.files.open_file_by_name(message)
 
         elif intent == "draft_message":
             response = self.comms.draft_message(message=message, language=language)

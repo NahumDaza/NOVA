@@ -51,6 +51,39 @@ class XTTSService:
             "en que te ayudo": "en_que_te_ayudo.mp3",
             "como va tu dia": "como_va_tu_dia.mp3",
             "todo bien por aqui nahum": "todo_bien_nahum.mp3",
+            "buenos dias jefe que necesitas": "buenos_dias_jefe_que_necesitas.mp3",
+            "buenos dias nahum que necesitas": "buenos_dias_nahum_que_necesitas.mp3",
+            "buenas tardes jefe que necesitas": "buenas_tardes_jefe_que_necesitas.mp3",
+            "buenas tardes nahum que necesitas": "buenas_tardes_nahum_que_necesitas.mp3",
+            "hola jefe en que te ayudo": "hola_jefe_en_que_te_ayudo.mp3",
+            "hola nahum como vas": "hola_nahum_como_vas.mp3",
+            "bienvenido de nuevo jefe que necesitas": "bienvenido_jefe_que_necesitas.mp3",
+            "bienvenido de nuevo nahum como vas": "bienvenido_nahum_como_vas.mp3",
+
+            "todo bien por aqui que necesitas": "todo_bien_que_necesitas.mp3",
+            "aqui estoy en que te ayudo": "aqui_estoy_en_que_te_ayudo.mp3",
+            "todo en orden como va tu dia": "todo_en_orden_como_va_tu_dia.mp3",
+            "estoy bien como vas": "estoy_bien_como_vas.mp3",
+            "estoy bien como vas tu": "estoy_bien_como_vas_tu.mp3",
+            "todo bien por aqui nahum": "todo_bien_nahum.mp3",
+
+            "prepare el correo para tu profesor": "correo_preparado.mp3",
+            "hice el ajuste": "ajuste_realizado.mp3",
+            "ya deje la traduccion lista": "traduccion_lista.mp3",
+            "ya prepare el resumen": "resumen_preparado.mp3",
+            "ya ajuste el texto": "texto_ajustado.mp3",
+            "lo copie": "lo_copie.mp3",
+
+            "y listo": "y_listo.mp3",
+            "y ya quedo": "y_ya_quedo.mp3",
+            "listo ya": "listo_ya.mp3",
+            "vamos a ello": "vamos_a_ello.mp3",
+            "un momento": "un_momento.mp3",
+
+            "no encontre archivos con ese nombre": "no_encontre_archivos.mp3",
+            "no identifique la aplicacion que quieres abrir": "no_identifique_la_aplicacion.mp3",
+            "no identifique la carpeta que quieres abrir": "no_identifique_la_carpeta.mp3",
+            "no te escuche bien intenta otra vez": "no_te_escuche_bien.mp3",
         }
 
     def _clean_text(self, text: str) -> str:

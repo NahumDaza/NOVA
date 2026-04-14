@@ -110,21 +110,60 @@ class Orchestrator:
         intent: str,
         response: str,
         conversation_id: str,
-    ) -> str:
+    ):
         state = self.terra_state.get(conversation_id)
         base_response = self._strip_leading_greeting(response)
 
+        if intent == "open_app":
+            return "Abrí la aplicación."
+
+        if intent == "open_folder":
+            return "Abrí la carpeta."
+
+        if intent == "save_note":
+            return "Guardé la nota."
+
+        if intent == "save_task":
+            return "Guardé la tarea."
+
+        if intent == "copy_text":
+            return "Lo copié."
+
+        if intent == "open_found_file":
+            return "Perfecto."
+
+        if intent == "open_file":
+            return "Perfecto."
+
         if intent == "draft_message":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return f"{confirmation} Preparé el correo para tu profesor."
+            return "Preparé el correo para tu profesor."
 
         if intent == "refine_previous_output":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return f"{confirmation} Hice el ajuste."
+            return "Hice el ajuste."
+
+        if intent == "summarize_text":
+            return "Ya preparé el resumen."
+
+        if intent == "translate_text":
+            return "Ya dejé la traducción lista."
+
+        if intent == "rewrite_text":
+            return "Ya ajusté el texto."
 
         if intent == "general_chat":
+            text = (base_response or "").lower()
+
+            # Respuestas premium controladas para maximizar clips
+            if "cómo estás" in text or "como estas" in text:
+                return "Todo bien por aquí. ¿Qué necesitas?"
+
+            if "qué tal" in text or "que tal" in text:
+                return "Aquí estoy. ¿En qué te ayudo?"
+
+            if "cómo vas" in text or "como vas" in text:
+                return "Estoy bien. ¿Cómo vas tú?"
+
+            # saludo contextual básico
             greeting = self.persona.greeting_for_context(state)
             state.last_greeting = greeting
 
@@ -136,50 +175,8 @@ class Orchestrator:
 
             return {
                 "prefix": greeting,
-                "main": "",
+                "main": "¿Qué necesitas?",
             }
-
-        if intent == "summarize_text":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return f"{confirmation} Ya preparé el resumen."
-
-        if intent == "translate_text":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return f"{confirmation} Ya dejé la traducción lista."
-
-        if intent == "rewrite_text":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return f"{confirmation} Ya ajusté el texto."
-
-        if intent == "open_app":
-            return "Abrí la aplicación."
-
-        if intent == "copy_text":
-            return "Hecho."
-
-        if intent == "save_note":
-            return "Guardé la nota."
-
-        if intent == "save_task":
-            return "Guardé la tarea."
-        
-        if intent == "open_folder":
-            return "Abrí la carpeta."
-
-        if intent == "find_file":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return f"{confirmation} {base_response}".strip()
-
-        if intent == "open_found_file":
-            return "Perfecto."
-
-
-        if intent == "open_file":
-            return "Perfecto."
 
         return base_response or response
 

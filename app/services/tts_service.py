@@ -50,6 +50,7 @@ class XTTSService:
             "listo nahum": "listo_nahum.mp3",
             "en que te ayudo": "en_que_te_ayudo.mp3",
             "como va tu dia": "como_va_tu_dia.mp3",
+            "como vas tu ": "como_vas_tu.mp3",
             "todo bien por aqui nahum": "todo_bien_nahum.mp3",
             "buenos dias jefe que necesitas": "buenos_dias_jefe_que_necesitas.mp3",
             "buenos dias nahum que necesitas": "buenos_dias_nahum_que_necesitas.mp3",

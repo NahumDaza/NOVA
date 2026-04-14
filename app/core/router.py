@@ -74,6 +74,18 @@ class IntentRouter:
             ],
         ):
             return "open_found_file"
+        
+        if self._match_any(text, ["lee el último archivo encontrado", "lee el ultimo archivo encontrado", "lee el archivo encontrado"]):
+            return "read_last_found_file"
+
+        if self._match_any(text, ["lee el archivo", "lee archivo", "lee el pdf", "leer archivo", "leer pdf"]):
+            return "read_file"
+
+        if self._match_any(text, ["lee este archivo", "lee el archivo activo", "resume este archivo", "resume este pdf"]):
+            return "read_active_file"
+
+        if self._match_any(text, ["archivo activo", "cuál es el archivo activo", "cual es el archivo activo"]):
+            return "get_active_file"
 
         if self._match_any(text, ["abre", "open", "abrir"]):
             if any(x in text for x in ["archivo", ".pdf", ".doc", ".docx", ".txt", ".xlsx", ".pptx"]):

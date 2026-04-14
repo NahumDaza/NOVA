@@ -35,6 +35,7 @@ class Orchestrator:
         self.text_tools = TextToolsModule()
         self.system = SystemActionsModule()
         self.files = FileActionsModule()
+        
 
     def _strip_leading_greeting(self, text: str) -> str:
         cleaned = text.strip()
@@ -149,6 +150,18 @@ class Orchestrator:
 
         if intent == "rewrite_text":
             return "Ya ajusté el texto."
+        
+        if intent == "read_last_found_file":
+            return "Estoy leyendo el archivo."
+
+        if intent == "read_file":
+            return "Estoy leyendo el archivo."
+
+        if intent == "read_active_file":
+            return "Estoy revisando el archivo activo."
+
+        if intent == "get_active_file":
+            return "Te lo confirmo."
 
         if intent == "general_chat":
             text = (base_response or "").lower()
@@ -286,6 +299,18 @@ class Orchestrator:
 
         elif intent == "rewrite_text":
             response = self.text_tools.rewrite(message=message, language=language)
+
+        elif intent == "read_last_found_file":
+            response = self.files.read_last_found_file()
+
+        elif intent == "read_file":
+            response = self.files.read_file_by_name(message)
+
+        elif intent == "read_active_file":
+            response = self.files.read_active_file()
+
+        elif intent == "get_active_file":
+            response = self.files.get_active_file_name()
 
     
 

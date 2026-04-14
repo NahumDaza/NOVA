@@ -48,18 +48,18 @@ class FileActionsModule:
         suffix = path.suffix.lower()
 
         spoken_ext_map = {
-            ".pdf": "pe de efe",
-            ".png": "pe ene ge",
-            ".jpg": "jota pe ge",
-            ".jpeg": "jota pe e ge",
-            ".doc": "word",
-            ".docx": "word",
-            ".xls": "excel",
-            ".xlsx": "excel",
-            ".csv": "si es bi",
-            ".txt": "texto",
-            ".json": "yeison",
-            ".py": "paiton",
+            ".pdf": "documento PDF",
+            ".png": "imagen PNG",
+            ".jpg": "imagen JPG",
+            ".jpeg": "imagen JPEG",
+            ".doc": "documento Word",
+            ".docx": "documento Word",
+            ".xls": "archivo Excel",
+            ".xlsx": "archivo Excel",
+            ".csv": "archivo siesbi",
+            ".txt": "archivo de texto",
+            ".json": "archivo yeiSON",
+            ".py": "archivo Paithon",
         }
 
         spoken_name = stem.replace("_", " ").replace("-", " ").strip()

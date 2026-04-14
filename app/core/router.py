@@ -177,6 +177,7 @@ class IntentRouter:
             [
                 "busca el archivo",
                 "busca archivo",
+                "buscan archivo",
                 "encuentra el archivo",
                 "encuentra archivo",
                 "busca el pdf",

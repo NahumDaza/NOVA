@@ -63,6 +63,7 @@ class XTTSService:
             "todo bien por aqui que necesitas": "todo_bien_que_necesitas.mp3",
             "aqui estoy en que te ayudo": "aqui_estoy_en_que_te_ayudo.mp3",
             "todo en orden como va tu dia": "todo_en_orden_como_va_tu_dia.mp3",
+            "estoy bien": "estoy_bien.mp3",
             "estoy bien como vas": "estoy_bien_como_vas.mp3",
             "estoy bien como vas tu": "estoy_bien_como_vas_tu.mp3",
             "todo bien por aqui nahum": "todo_bien_nahum.mp3",
@@ -262,7 +263,7 @@ class XTTSService:
 
         wav_paths = [self._convert_to_wav(path) for path in audio_paths]
         return self._merge_wav_files(wav_paths)
-
+    
     def _build_audio_sequence(self, text: str) -> List[str]:
         sentences = self._split_into_sentences(text)
         if not sentences:
@@ -270,12 +271,17 @@ class XTTSService:
 
         audio_parts: List[str] = []
 
+        print("\n[TTS DEBUG] Texto completo:", text)
+        print("[TTS DEBUG] Oraciones detectadas:", sentences)
+
         for sentence in sentences:
             clip = self._get_clip_for_text(sentence)
             if clip:
+                print(f"[TTS DEBUG] CLIP  -> {sentence} -> {clip}")
                 audio_parts.append(clip)
                 continue
 
+            print(f"[TTS DEBUG] XTTS  -> {sentence}")
             chunks = self._chunk_text(sentence)
             for chunk in chunks:
                 audio_parts.append(self._synthesize_chunk(chunk))

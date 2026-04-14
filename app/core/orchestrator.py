@@ -128,6 +128,16 @@ class Orchestrator:
             greeting = self.persona.greeting_for_context(state)
             state.last_greeting = greeting
 
+            short_map = {
+                "Aquí estoy, Nahum.": "Aquí estoy.",
+                "Aquí estoy, jefe.": "Aquí estoy.",
+                "Todo en orden, Nahum.": "Todo en orden.",
+                "Todo en orden, jefe.": "Todo en orden.",
+            }
+
+            if greeting in short_map and not base_response:
+                return short_map[greeting]
+
             if base_response:
                 return f"{greeting} {base_response}".strip()
             return greeting
@@ -148,29 +158,19 @@ class Orchestrator:
             return f"{confirmation} Ya ajusté el texto."
 
         if intent == "open_app":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return confirmation
+            return "Abrí la aplicación."
 
         if intent == "copy_text":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return f"{confirmation} Lo copié."
+            return "Hecho."
 
         if intent == "save_note":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return f"{confirmation} Guardé la nota en Notes."
+            return "Guardé la nota."
 
         if intent == "save_task":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return f"{confirmation} Guardé la tarea en Reminders."
+            return "Guardé la tarea."
         
         if intent == "open_folder":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return confirmation
+            return "Abrí la carpeta."
 
         if intent == "find_file":
             confirmation = self.persona.confirmation(state)
@@ -178,14 +178,11 @@ class Orchestrator:
             return f"{confirmation} {base_response}".strip()
 
         if intent == "open_found_file":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return confirmation
+            return "Perfecto."
+
 
         if intent == "open_file":
-            confirmation = self.persona.confirmation(state)
-            state.last_confirmation = confirmation
-            return confirmation
+            return "Perfecto."
 
         return base_response or response
 

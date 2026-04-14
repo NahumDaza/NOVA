@@ -17,10 +17,73 @@ class XTTSService:
         self.output_dir = Path("data/tts")
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
+        self.clips_dir = Path("/Users/macuser/nova-audio/clips")
+
+        self.clip_map = {
+            "claro": "claro.mp3",
+            "perfecto": "perfecto.mp3",
+            "listo jefe": "listo_jefe.mp3",
+            "que necesitas": "que_necesitas.mp3",
+            "todo en orden": "todo_en_orden.mp3",
+            "aqui estoy": "aqui_estoy.mp3",
+            "abri la carpeta": "abri_la_carpeta.mp3",
+            "abri la aplicacion": "abri_la_aplicacion.mp3",
+            "guarde la nota": "guarde_la_nota.mp3",
+            "guarde la tarea": "guarde_la_tarea.mp3",
+            "preparado": "preparado.mp3",
+            "en orden": "en_orden.mp3",
+            "hecho": "hecho.mp3",
+            "listo": "listo.mp3",
+        }
+
     def _clean_text(self, text: str) -> str:
         text = text.strip()
         text = re.sub(r"\s+", " ", text)
         return text
+
+    def _normalize_for_clip_match(self, text: str) -> str:
+        cleaned = text.lower().strip()
+
+        replacements = {
+            "á": "a",
+            "é": "e",
+            "í": "i",
+            "ó": "o",
+            "ú": "u",
+            "ü": "u",
+            "¿": "",
+            "?": "",
+            "¡": "",
+            "!": "",
+            ".": "",
+            ",": "",
+            ":": "",
+            ";": "",
+        }
+
+        for old, new in replacements.items():
+            cleaned = cleaned.replace(old, new)
+
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        return cleaned
+
+    def _get_clip_for_text(self, text: str) -> str | None:
+        normalized = self._normalize_for_clip_match(text)
+
+        # match exacto
+        if normalized in self.clip_map:
+            candidate = self.clips_dir / self.clip_map[normalized]
+            if candidate.exists():
+                return str(candidate)
+
+        # match flexible
+        for key, filename in self.clip_map.items():
+            if key in normalized:
+                candidate = self.clips_dir / filename
+                if candidate.exists():
+                    return str(candidate)
+
+        return None
 
     def _split_into_sentences(self, text: str) -> List[str]:
         text = self._clean_text(text)
@@ -82,7 +145,7 @@ class XTTSService:
 
         return audio_path
 
-    def _validate_wav_compatibility(self, wav_paths: List[Path]) -> tuple[int, int, int, int]:
+    def _validate_wav_compatibility(self, wav_paths: List[Path]) -> tuple[int, int, int, str]:
         if not wav_paths:
             raise ValueError("No WAV files provided for merge.")
 
@@ -149,6 +212,10 @@ class XTTSService:
         return audio_paths
 
     def synthesize(self, text: str, intent: str | None = None) -> str:
+        clip_path = self._get_clip_for_text(text)
+        if clip_path:
+            return clip_path
+
         chunks = self._chunk_text(text)
         if not chunks:
             raise ValueError("No text provided for TTS synthesis.")

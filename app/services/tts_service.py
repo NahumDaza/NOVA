@@ -209,16 +209,13 @@ class XTTSService:
 
     def _convert_to_wav(self, input_path: str) -> str:
         input_file = Path(input_path)
-        if input_file.suffix.lower() == ".wav":
-            return str(input_file)
-
         output_path = self.output_dir / f"clip_{uuid.uuid4().hex}.wav"
 
         cmd = [
             "ffmpeg",
             "-y",
             "-i", str(input_file),
-            "-ar", "22050",
+            "-ar", "24000",
             "-ac", "1",
             "-c:a", "pcm_s16le",
             str(output_path),

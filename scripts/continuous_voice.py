@@ -22,11 +22,11 @@ CHANNELS = 1
 BLOCK_DURATION = 0.2  # segundos
 BLOCK_SIZE = int(SAMPLE_RATE * BLOCK_DURATION)
 
-START_THRESHOLD = 0.008   # sensibilidad de inicio
-SILENCE_THRESHOLD = 0.006 # sensibilidad de silencio
-MAX_SILENCE_SECONDS = 1.2
-MAX_RECORD_SECONDS = 11.0
-MIN_SPEECH_SECONDS = 0.7
+START_THRESHOLD = 0.009   # sensibilidad de inicio
+SILENCE_THRESHOLD = 0.007 # sensibilidad de silencio
+MAX_SILENCE_SECONDS = 0.9
+MAX_RECORD_SECONDS = 0.8
+MIN_SPEECH_SECONDS = 10.0
 
 
 def rms(audio: np.ndarray) -> float:

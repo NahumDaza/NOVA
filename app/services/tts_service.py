@@ -65,6 +65,7 @@ class XTTSService:
             "aqui estoy en que te ayudo": "aqui_estoy_en_que_te_ayudo.mp3",
             "todo en orden como va tu dia": "todo_en_orden_como_va_tu_dia.mp3",
             "estoy bien": "estoy_bien.mp3",
+            "estoy bien que necesitas": "estoy_bien_que_necesitas.mp3",
             "estoy bien como vas": "estoy_bien_como_vas.mp3",
             "estoy bien como vas tu": "estoy_bien_como_vas_tu.mp3",
             "todo bien por aqui nahum": "todo_bien_nahum.mp3",

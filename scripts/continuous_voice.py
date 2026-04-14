@@ -19,14 +19,14 @@ CONVERSATION_ID = "terra-continuous-1"
 
 SAMPLE_RATE = 16000
 CHANNELS = 1
-BLOCK_DURATION = 0.2  # segundos
+BLOCK_DURATION = 0.1  # segundos
 BLOCK_SIZE = int(SAMPLE_RATE * BLOCK_DURATION)
 
-START_THRESHOLD = 0.008   # sensibilidad de inicio
-SILENCE_THRESHOLD = 0.006 # sensibilidad de silencio
-MAX_SILENCE_SECONDS = 0.9
-MAX_RECORD_SECONDS = 11.0
-MIN_SPEECH_SECONDS = 0.7
+START_THRESHOLD = 0.009   # sensibilidad de inicio
+SILENCE_THRESHOLD = 0.0075 # sensibilidad de silencio
+MAX_SILENCE_SECONDS = 0.6
+MAX_RECORD_SECONDS = 10.0
+MIN_SPEECH_SECONDS = 0.5
 
 
 def rms(audio: np.ndarray) -> float:
@@ -40,7 +40,7 @@ def record_until_silence() -> str | None:
 
     frames: list[np.ndarray] = []
     prebuffer: list[np.ndarray] = []
-    max_prebuffer_blocks = 3  # 3 * 0.2s = 0.6s
+    max_prebuffer_blocks = 5  # 5 * 0.1s = 0.5s
 
     speech_started = False
     silence_time = 0.0

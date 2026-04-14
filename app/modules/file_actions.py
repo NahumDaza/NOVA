@@ -48,10 +48,10 @@ class FileActionsModule:
         suffix = path.suffix.lower()
 
         spoken_ext_map = {
-            ".pdf": "documento PDF",
-            ".png": "imagen PNG",
-            ".jpg": "imagen JPG",
-            ".jpeg": "imagen JPEG",
+            ".pdf": "documento Pe de efe",
+            ".png": "imagen Pe ene je",
+            ".jpg": "imagen Jota pe ge",
+            ".jpeg": "imagen Jota pe e ge",
             ".doc": "documento Word",
             ".docx": "documento Word",
             ".xls": "archivo Excel",
@@ -194,7 +194,7 @@ class FileActionsModule:
                     scored_matches.append((score, path))
 
         scored_matches.sort(key=lambda x: x[0], reverse=True)
-        return [path for _, path in scored_matches[:10]]
+        return [path for _, path in scored_matches]
 
     def find_file(self, message: str) -> str:
         query = self._clean_search_query(message)
@@ -205,6 +205,7 @@ class FileActionsModule:
         matches = self._find_matches(query)
         total_matches = len(matches)
         self.last_found_files = matches[:10]
+
         print("[FILE DEBUG] query:", query)
         print("[FILE DEBUG] total matches:", total_matches)
         print("[FILE DEBUG] top 10:", [p.name for p in self.last_found_files])
@@ -219,7 +220,7 @@ class FileActionsModule:
 
         if total_matches == 1:
             return f"Encontré el archivo {spoken_first}."
-        
+
         return f"Encontré {total_matches} archivos. El primero es {spoken_first}."
 
 

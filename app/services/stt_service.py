@@ -155,6 +155,18 @@ class WhisperCppSTTService:
             "Firma la linea": "Firma Vladimir",
             "img 2618": "img_2618",
             "Img 2618": "IMG_2618",
+            "q o y m g 2618": "img 2618",
+            "Q O Y M G 2618": "IMG 2618",
+            "tauro nuevo": "cobro 9",
+            "Tauro Nuevo": "Cobro 9",
+            "buscari": "busca",
+            "perra": "terra",
+            "guerra": "terra",
+            "derra": "terra",
+            "cuenta de tauro 9": "cuenta de cobro 9",
+            "cuenta de tauro nuevo": "cuenta de cobro 9",
+            "Cierra busca": "Terra busca",
+            "cierra busca": "terra busca",
         }
 
         for old, new in replacements.items():

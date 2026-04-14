@@ -40,23 +40,26 @@ class FileActionsModule:
             ".txt", ".md", ".py", ".json", ".csv", ".xml", ".yaml", ".yml", ".log"
         }
 
+    def _extract_numbers(self, text: str) -> set[str]:
+        return set(re.findall(r"\d+", text))
+
     def _spoken_filename(self, path: Path) -> str:
         stem = path.stem
         suffix = path.suffix.lower()
 
         spoken_ext_map = {
-            ".pdf": "PDF",
-            ".png": "PNG",
-            ".jpg": "JPG",
-            ".jpeg": "JPEG",
-            ".doc": "Word",
-            ".docx": "Word",
-            ".xls": "Excel",
-            ".xlsx": "Excel",
-            ".csv": "CSV",
+            ".pdf": "pe de efe",
+            ".png": "pe ene ge",
+            ".jpg": "jota pe ge",
+            ".jpeg": "jota pe e ge",
+            ".doc": "word",
+            ".docx": "word",
+            ".xls": "excel",
+            ".xlsx": "excel",
+            ".csv": "si es bi",
             ".txt": "texto",
-            ".json": "JSON",
-            ".py": "Python",
+            ".json": "yeison",
+            ".py": "paiton",
         }
 
         spoken_name = stem.replace("_", " ").replace("-", " ").strip()
@@ -140,29 +143,36 @@ class FileActionsModule:
 
         score = 0.0
 
-        # Coincidencia exacta normalizada
         if q_norm == f_norm:
             score += 100
 
-        # Coincidencia compacta (img 2618 vs img_2618)
         if q_compact == f_compact:
             score += 95
 
-        # Contención
         if q_norm in f_norm:
             score += 80
 
         if q_compact in f_compact:
             score += 85
 
-        # Tokens
         q_tokens = set(q_norm.split())
         f_tokens = set(f_norm.split())
 
         common = q_tokens.intersection(f_tokens)
         score += len(common) * 12
 
-        # Fuzzy general
+        # peso MUY alto para números coincidentes
+        q_numbers = self._extract_numbers(q_norm)
+        f_numbers = self._extract_numbers(f_norm)
+
+        if q_numbers and f_numbers:
+            common_numbers = q_numbers.intersection(f_numbers)
+            score += len(common_numbers) * 40
+
+            # penaliza si el query tenía número y el archivo no coincide
+            if not common_numbers:
+                score -= 25
+
         score += difflib.SequenceMatcher(None, q_norm, f_norm).ratio() * 50
         score += difflib.SequenceMatcher(None, q_compact, f_compact).ratio() * 50
 
@@ -193,6 +203,7 @@ class FileActionsModule:
             return "No detecté el nombre del archivo que quieres buscar."
 
         matches = self._find_matches(query)
+        total_matches = len(matches)
         self.last_found_files = matches[:10]
 
         if not self.last_found_files:
@@ -203,10 +214,10 @@ class FileActionsModule:
 
         spoken_first = self._spoken_filename(first)
 
-        if len(self.last_found_files) == 1:
+        if total_matches == 1:
             return f"Encontré el archivo {spoken_first}."
 
-        return f"Encontré {len(self.last_found_files)} archivos. El primero es {spoken_first}."
+        return f"Encontré {total_matches} archivos. El primero es {spoken_first}."
 
     def open_found_file(self) -> str:
         if not self.last_found_files:

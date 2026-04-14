@@ -86,6 +86,14 @@ def prepare_text_for_speech(text: str) -> str:
     cleaned = cleaned.replace("Visual Studio Code", "VS Code")
     cleaned = cleaned.replace("Notes", "Notas")
     cleaned = cleaned.replace("Reminders", "Recordatorios")
+    cleaned = cleaned.replace(" PDF", ", pe de efe")
+    cleaned = cleaned.replace(" PNG", ", pe ene ge")
+    cleaned = cleaned.replace(" JPG", ", jota pe ge")
+    cleaned = cleaned.replace(" JPEG", ", jota pe e ge")
+    cleaned = cleaned.replace(".pdf", ", pe de efe")
+    cleaned = cleaned.replace(".png", ", pe ene ge")
+    cleaned = cleaned.replace(".jpg", ", jota pe ge")
+    cleaned = cleaned.replace(".jpeg", ", jota pe e ge")
 
     greeting_replacements = {
         "Hola, soy NOVA con mi nueva voz": "Soy Nóva con mi nueva voz",

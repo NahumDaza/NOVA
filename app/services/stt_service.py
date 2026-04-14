@@ -149,6 +149,12 @@ class WhisperCppSTTService:
             "redacto un correo": "redacta un correo",
             "email": "correo",
             "clases": "clase",
+            "cobra 9": "cobro 9",
+            "Cobra 9": "Cobro 9",
+            "firma la linea": "firma vladimir",
+            "Firma la linea": "Firma Vladimir",
+            "img 2618": "img_2618",
+            "Img 2618": "IMG_2618",
         }
 
         for old, new in replacements.items():

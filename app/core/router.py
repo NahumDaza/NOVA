@@ -171,6 +171,27 @@ class IntentRouter:
             ],
         ):
             return "think_process"
+        
+        if self._match_any(
+            text,
+            [
+                "busca el archivo",
+                "busca archivo",
+                "encuentra el archivo",
+                "encuentra archivo",
+                "busca el pdf",
+                "busca pdf",
+                "lee el archivo",
+                "lee archivo",
+                "abre el archivo",
+                "abre archivo",
+            ],
+        ):
+            if "lee" in text:
+                return "read_file"
+            if "abre" in text:
+                return "open_file"
+            return "find_file"
 
         if self._looks_like_english(text):
             return "improve_english"
@@ -181,7 +202,13 @@ class IntentRouter:
         return any(word in text for word in keywords)
 
     def _match_math(self, text: str) -> bool:
-        return bool(re.search(r"[0-9x\+\-\*/=]", text)) and not self._is_refinement(text)
+        math_patterns = [
+            r"\d+\s*[\+\-\*/=]\s*\d+",
+            r"cuanto es\s+\d+",
+            r"resuelve\s+\d+",
+            r"calcula\s+\d+",
+        ]
+        return any(re.search(p, text) for p in math_patterns) and not self._is_refinement(text)
 
     def _looks_like_english(self, text: str) -> bool:
         patterns = [

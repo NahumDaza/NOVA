@@ -129,12 +129,15 @@ class Orchestrator:
 
         if intent == "copy_text":
             return "Lo copié."
+        
+        if intent == "find_file":
+            return response
 
         if intent == "open_found_file":
-            return "Perfecto."
+            return response
 
         if intent == "open_file":
-            return "Perfecto."
+            return response
 
         if intent == "draft_message":
             return "Preparé el correo para tu profesor."
@@ -161,7 +164,7 @@ class Orchestrator:
             return "Estoy revisando el archivo activo."
 
         if intent == "get_active_file":
-            return "Te lo confirmo."
+            return response
 
         if intent == "general_chat":
             text = (base_response or "").lower()

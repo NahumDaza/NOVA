@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import difflib
+import re
 import subprocess
+import unicodedata
 from pathlib import Path
-from typing import Optional
 
 from pypdf import PdfReader
 
@@ -38,43 +40,159 @@ class FileActionsModule:
             ".txt", ".md", ".py", ".json", ".csv", ".xml", ".yaml", ".yml", ".log"
         }
 
+    def _spoken_filename(self, path: Path) -> str:
+        stem = path.stem
+        suffix = path.suffix.lower()
+
+        spoken_ext_map = {
+            ".pdf": "PDF",
+            ".png": "PNG",
+            ".jpg": "JPG",
+            ".jpeg": "JPEG",
+            ".doc": "Word",
+            ".docx": "Word",
+            ".xls": "Excel",
+            ".xlsx": "Excel",
+            ".csv": "CSV",
+            ".txt": "texto",
+            ".json": "JSON",
+            ".py": "Python",
+        }
+
+        spoken_name = stem.replace("_", " ").replace("-", " ").strip()
+
+        # caso útil para imágenes tipo IMG_2618
+        if spoken_name.lower().startswith("img "):
+            spoken_name = spoken_name.lower().replace("img ", "imagen ", 1)
+
+        spoken_name = re.sub(r"\s+", " ", spoken_name).strip()
+        spoken_ext = spoken_ext_map.get(suffix, suffix.replace(".", "").upper())
+
+        return f"{spoken_name}, {spoken_ext}".strip()
+
+    # -------------------------
+    # NORMALIZATION
+    # -------------------------
+    def _normalize(self, text: str) -> str:
+        text = text.strip().lower()
+        text = unicodedata.normalize("NFKD", text)
+        text = "".join(ch for ch in text if not unicodedata.combining(ch))
+        text = text.replace("_", " ")
+        text = text.replace("-", " ")
+        text = re.sub(r"[^\w\s]", " ", text)
+        text = re.sub(r"\s+", " ", text).strip()
+        return text
+
+    def _compact(self, text: str) -> str:
+        return self._normalize(text).replace(" ", "")
+
+    def _clean_search_query(self, message: str) -> str:
+        text = self._normalize(message)
+
+        noise_phrases = [
+            "terra",
+            "busca",
+            "buscar",
+            "encuentra",
+            "abre",
+            "abrir",
+            "lee",
+            "leer",
+            "el archivo",
+            "archivo",
+            "el pdf",
+            "pdf",
+            "por favor",
+            "cierra",
+        ]
+
+        for phrase in noise_phrases:
+            text = text.replace(phrase, " ")
+
+        text = re.sub(r"\s+", " ", text).strip()
+        return text
+
+    # -------------------------
+    # FOLDERS
+    # -------------------------
     def open_folder(self, message: str) -> str:
-        text = message.lower()
+        text = self._normalize(message)
 
         for key, folder_path in self.folder_map.items():
-            if key in text and folder_path.exists():
+            if self._normalize(key) in text and folder_path.exists():
                 subprocess.Popen(["open", str(folder_path)])
                 return f"Abrí {folder_path.name}."
 
         return "No identifiqué la carpeta que quieres abrir."
 
-    def find_file(self, message: str) -> str:
-        text = message.lower()
-        query = (
-            text.replace("terra", "")
-            .replace("busca", "")
-            .replace("buscar", "")
-            .replace("encuentra", "")
-            .replace("el archivo", "")
-            .replace("archivo", "")
-            .replace("el pdf", "")
-            .replace("pdf", "")
-            .strip(" :,.")
-        )
+    # -------------------------
+    # FILE SEARCH
+    # -------------------------
+    def _score_file_match(self, query: str, filename: str) -> float:
+        q_norm = self._normalize(query)
+        f_norm = self._normalize(filename)
 
-        if not query:
-            return "No detecté el nombre del archivo que quieres buscar."
+        q_compact = self._compact(query)
+        f_compact = self._compact(filename)
 
-        matches: list[Path] = []
+        if not q_norm:
+            return 0.0
+
+        score = 0.0
+
+        # Coincidencia exacta normalizada
+        if q_norm == f_norm:
+            score += 100
+
+        # Coincidencia compacta (img 2618 vs img_2618)
+        if q_compact == f_compact:
+            score += 95
+
+        # Contención
+        if q_norm in f_norm:
+            score += 80
+
+        if q_compact in f_compact:
+            score += 85
+
+        # Tokens
+        q_tokens = set(q_norm.split())
+        f_tokens = set(f_norm.split())
+
+        common = q_tokens.intersection(f_tokens)
+        score += len(common) * 12
+
+        # Fuzzy general
+        score += difflib.SequenceMatcher(None, q_norm, f_norm).ratio() * 50
+        score += difflib.SequenceMatcher(None, q_compact, f_compact).ratio() * 50
+
+        return score
+
+    def _find_matches(self, query: str) -> list[Path]:
+        scored_matches: list[tuple[float, Path]] = []
 
         for root in self.search_roots:
             if not root.exists():
                 continue
 
             for path in root.rglob("*"):
-                if path.is_file() and query in path.name.lower():
-                    matches.append(path)
+                if not path.is_file():
+                    continue
 
+                score = self._score_file_match(query, path.name)
+                if score >= 45:
+                    scored_matches.append((score, path))
+
+        scored_matches.sort(key=lambda x: x[0], reverse=True)
+        return [path for _, path in scored_matches[:10]]
+
+    def find_file(self, message: str) -> str:
+        query = self._clean_search_query(message)
+
+        if not query:
+            return "No detecté el nombre del archivo que quieres buscar."
+
+        matches = self._find_matches(query)
         self.last_found_files = matches[:10]
 
         if not self.last_found_files:
@@ -82,7 +200,13 @@ class FileActionsModule:
 
         first = self.last_found_files[0]
         self.active_file = first
-        return f"Encontré {len(self.last_found_files)} archivo(s). El primero es {first.name}."
+
+        spoken_first = self._spoken_filename(first)
+
+        if len(self.last_found_files) == 1:
+            return f"Encontré el archivo {spoken_first}."
+
+        return f"Encontré {len(self.last_found_files)} archivos. El primero es {spoken_first}."
 
     def open_found_file(self) -> str:
         if not self.last_found_files:
@@ -91,31 +215,15 @@ class FileActionsModule:
         target = self.last_found_files[0]
         self.active_file = target
         subprocess.Popen(["open", str(target)])
-        return f"Abrí {target.name}."
+        return f"Abrí {self._spoken_filename(target)}."
 
     def open_file_by_name(self, message: str) -> str:
-        text = message.lower()
-        query = (
-            text.replace("terra", "")
-            .replace("abre", "")
-            .replace("abrir", "")
-            .replace("el archivo", "")
-            .replace("archivo", "")
-            .strip(" :,.")
-        )
+        query = self._clean_search_query(message)
 
         if not query:
             return "No detecté qué archivo quieres abrir."
 
-        matches: list[Path] = []
-
-        for root in self.search_roots:
-            if not root.exists():
-                continue
-
-            for path in root.rglob("*"):
-                if path.is_file() and query in path.name.lower():
-                    matches.append(path)
+        matches = self._find_matches(query)
 
         if not matches:
             return "No encontré un archivo con ese nombre."
@@ -124,12 +232,14 @@ class FileActionsModule:
         self.last_found_files = matches[:10]
         self.active_file = target
         subprocess.Popen(["open", str(target)])
-        return f"Abrí {target.name}."
+        return f"Abrí {self._spoken_filename(target)}."
 
+    # -------------------------
+    # FILE READING
+    # -------------------------
     def read_active_file(self) -> str:
         if not self.active_file:
             return "No tengo un archivo activo para leer."
-
         return self._read_file(self.active_file)
 
     def read_last_found_file(self) -> str:
@@ -140,30 +250,12 @@ class FileActionsModule:
         return self._read_file(self.active_file)
 
     def read_file_by_name(self, message: str) -> str:
-        text = message.lower()
-        query = (
-            text.replace("terra", "")
-            .replace("lee", "")
-            .replace("leer", "")
-            .replace("el archivo", "")
-            .replace("archivo", "")
-            .replace("el pdf", "")
-            .replace("pdf", "")
-            .strip(" :,.")
-        )
+        query = self._clean_search_query(message)
 
         if not query:
             return "No detecté qué archivo quieres leer."
 
-        matches: list[Path] = []
-
-        for root in self.search_roots:
-            if not root.exists():
-                continue
-
-            for path in root.rglob("*"):
-                if path.is_file() and query in path.name.lower():
-                    matches.append(path)
+        matches = self._find_matches(query)
 
         if not matches:
             return "No encontré un archivo con ese nombre."
@@ -176,8 +268,11 @@ class FileActionsModule:
     def get_active_file_name(self) -> str:
         if not self.active_file:
             return "No tengo un archivo activo en este momento."
-        return f"El archivo activo es {self.active_file.name}."
+        return f"El archivo activo es {self._spoken_filename(self.active_file)}."
 
+    # -------------------------
+    # LOW-LEVEL READERS
+    # -------------------------
     def _read_file(self, path: Path) -> str:
         suffix = path.suffix.lower()
 
@@ -186,8 +281,7 @@ class FileActionsModule:
                 return self._read_pdf(path)
 
             if suffix in self.readable_text_extensions:
-                content = path.read_text(encoding="utf-8", errors="ignore")
-                content = content.strip()
+                content = path.read_text(encoding="utf-8", errors="ignore").strip()
                 if not content:
                     return f"El archivo {path.name} está vacío."
                 return self._truncate_content(path.name, content)

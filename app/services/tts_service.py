@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import contextlib
 import re
+import subprocess
+import tempfile
 import uuid
 import wave
 from pathlib import Path
@@ -34,6 +36,27 @@ class XTTSService:
             "en orden": "en_orden.mp3",
             "hecho": "hecho.mp3",
             "listo": "listo.mp3",
+            "hola nahum": "hola_nahum.mp3",
+            "hola jefe": "hola_jefe.mp3",
+            "buenos dias nahum": "buenos_dias_nahum.mp3",
+            "buenos dias jefe": "buenos_dias_jefe.mp3",
+            "buenas tardes nahum": "buenas_tardes_nahum.mp3",
+            "buenas tardes jefe": "buenas_tardes_jefe.mp3",
+            "bienvenido de nuevo nahum": "bienvenido_nahum.mp3",
+            "bienvenido de nuevo jefe": "bienvenido_jefe.mp3",
+            "como vas": "como_vas.mp3",
+            "como estas": "como_estas.mp3",
+            "todo bien por aqui": "todo_bien.mp3",
+        }
+
+        self.clip_enabled_intents = {
+            "open_app",
+            "open_folder",
+            "save_note",
+            "save_task",
+            "copy_text",
+            "open_found_file",
+            "open_file",
         }
 
     def _clean_text(self, text: str) -> str:
@@ -70,18 +93,10 @@ class XTTSService:
     def _get_clip_for_text(self, text: str) -> str | None:
         normalized = self._normalize_for_clip_match(text)
 
-        # match exacto
         if normalized in self.clip_map:
             candidate = self.clips_dir / self.clip_map[normalized]
             if candidate.exists():
                 return str(candidate)
-
-        # match flexible
-        for key, filename in self.clip_map.items():
-            if key in normalized:
-                candidate = self.clips_dir / filename
-                if candidate.exists():
-                    return str(candidate)
 
         return None
 
@@ -178,9 +193,7 @@ class XTTSService:
 
         for path in path_objs:
             if path.suffix.lower() != ".wav":
-                raise ValueError(
-                    f"Expected WAV files for merge, but got: {path.name}"
-                )
+                raise ValueError(f"Expected WAV files for merge, but got: {path.name}")
             if not path.exists():
                 raise FileNotFoundError(f"Chunk audio file not found: {path}")
 
@@ -200,6 +213,32 @@ class XTTSService:
 
         return str(output_path)
 
+    def _convert_to_wav(self, input_path: str) -> str:
+        input_file = Path(input_path)
+        if input_file.suffix.lower() == ".wav":
+            return str(input_file)
+
+        output_path = self.output_dir / f"clip_{uuid.uuid4().hex}.wav"
+
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-i", str(input_file),
+            "-ar", "22050",
+            "-ac", "1",
+            "-c:a", "pcm_s16le",
+            str(output_path),
+        ]
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        return str(output_path)
+
+    def _concat_audio_files(self, audio_paths: List[str]) -> str:
+        if not audio_paths:
+            raise ValueError("No audio files provided for concatenation.")
+
+        wav_paths = [self._convert_to_wav(path) for path in audio_paths]
+        return self._merge_wav_files(wav_paths)
+
     def synthesize_many(self, text: str, intent: str | None = None) -> List[str]:
         chunks = self._chunk_text(text)
         if not chunks:
@@ -212,9 +251,10 @@ class XTTSService:
         return audio_paths
 
     def synthesize(self, text: str, intent: str | None = None) -> str:
-        clip_path = self._get_clip_for_text(text)
-        if clip_path:
-            return clip_path
+        if intent in self.clip_enabled_intents:
+            clip_path = self._get_clip_for_text(text)
+            if clip_path:
+                return clip_path
 
         chunks = self._chunk_text(text)
         if not chunks:
@@ -225,3 +265,30 @@ class XTTSService:
 
         audio_paths = [self._synthesize_chunk(chunk) for chunk in chunks]
         return self._merge_wav_files(audio_paths)
+
+    def synthesize_with_prefix(
+        self,
+        prefix_text: str | None,
+        main_text: str,
+        intent: str | None = None,
+    ) -> str:
+        audio_parts: List[str] = []
+
+        if prefix_text:
+            prefix_clip = self._get_clip_for_text(prefix_text)
+            if prefix_clip:
+                audio_parts.append(prefix_clip)
+            else:
+                audio_parts.append(self.synthesize(prefix_text, intent=None))
+
+        main_text = self._clean_text(main_text)
+        if main_text:
+            audio_parts.append(self.synthesize(main_text, intent=None))
+
+        if not audio_parts:
+            raise ValueError("No audio parts generated for synthesize_with_prefix.")
+
+        if len(audio_parts) == 1:
+            return audio_parts[0]
+
+        return self._concat_audio_files(audio_parts)

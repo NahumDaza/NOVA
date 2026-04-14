@@ -143,7 +143,15 @@ async def respond_with_audio(
         tts_error = None
 
         try:
-            audio_path = tts.synthesize(audio_source, intent=result["intent"])
+            if isinstance(audio_source, dict):
+                audio_path = tts.synthesize_with_prefix(
+                    prefix_text=audio_source.get("prefix"),
+                    main_text=audio_source.get("main", ""),
+                    intent=result["intent"],
+                )
+            else:
+                audio_path = tts.synthesize(audio_source, intent=result["intent"])
+
             if autoplay and audio_path:
                 subprocess.Popen(["afplay", "-q", "1", audio_path])
         except Exception as tts_exc:

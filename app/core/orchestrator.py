@@ -128,19 +128,16 @@ class Orchestrator:
             greeting = self.persona.greeting_for_context(state)
             state.last_greeting = greeting
 
-            short_map = {
-                "Aquí estoy, Nahum.": "Aquí estoy.",
-                "Aquí estoy, jefe.": "Aquí estoy.",
-                "Todo en orden, Nahum.": "Todo en orden.",
-                "Todo en orden, jefe.": "Todo en orden.",
-            }
-
-            if greeting in short_map and not base_response:
-                return short_map[greeting]
-
             if base_response:
-                return f"{greeting} {base_response}".strip()
-            return greeting
+                return {
+                    "prefix": greeting,
+                    "main": base_response,
+                }
+
+            return {
+                "prefix": greeting,
+                "main": "",
+            }
 
         if intent == "summarize_text":
             confirmation = self.persona.confirmation(state)

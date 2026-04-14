@@ -167,11 +167,11 @@ class FileActionsModule:
 
         if q_numbers and f_numbers:
             common_numbers = q_numbers.intersection(f_numbers)
-            score += len(common_numbers) * 40
+            score += len(common_numbers) * 60
 
             # penaliza si el query tenía número y el archivo no coincide
             if not common_numbers:
-                score -= 25
+                score -= 60
 
         score += difflib.SequenceMatcher(None, q_norm, f_norm).ratio() * 50
         score += difflib.SequenceMatcher(None, q_compact, f_compact).ratio() * 50
@@ -205,6 +205,9 @@ class FileActionsModule:
         matches = self._find_matches(query)
         total_matches = len(matches)
         self.last_found_files = matches[:10]
+        print("[FILE DEBUG] query:", query)
+        print("[FILE DEBUG] total matches:", total_matches)
+        print("[FILE DEBUG] top 10:", [p.name for p in self.last_found_files])
 
         if not self.last_found_files:
             return "No encontré archivos con ese nombre."
@@ -216,8 +219,9 @@ class FileActionsModule:
 
         if total_matches == 1:
             return f"Encontré el archivo {spoken_first}."
-
+        
         return f"Encontré {total_matches} archivos. El primero es {spoken_first}."
+
 
     def open_found_file(self) -> str:
         if not self.last_found_files:

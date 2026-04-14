@@ -167,6 +167,18 @@ class WhisperCppSTTService:
             "cuenta de tauro nuevo": "cuenta de cobro 9",
             "Cierra busca": "Terra busca",
             "cierra busca": "terra busca",
+            "firma el video": "firma vladimir",
+            "Firma el video": "Firma Vladimir",
+            "firma a vladimir": "firma vladimir",
+            "Firma a Vladimir": "Firma Vladimir",
+            "cobror 9": "cobro 9",
+            "Cobror 9": "Cobro 9",
+            "img 26": "img 2618",
+            "IMG 26": "IMG 2618",
+            "im26108": "img 2618",
+            "Im26108": "IMG 2618",
+            "ferra": "terra",
+            "Ferra": "Terra",
         }
 
         for old, new in replacements.items():

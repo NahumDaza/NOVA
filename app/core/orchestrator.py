@@ -185,7 +185,7 @@ class Orchestrator:
         if intent == "open_file":
             confirmation = self.persona.confirmation(state)
             state.last_confirmation = confirmation
-            return confirmation)
+            return confirmation
 
         return base_response or response
 

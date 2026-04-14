@@ -19,11 +19,11 @@ CONVERSATION_ID = "terra-continuous-1"
 
 SAMPLE_RATE = 16000
 CHANNELS = 1
-BLOCK_DURATION = 0.1  # segundos
+BLOCK_DURATION = 0.1
 BLOCK_SIZE = int(SAMPLE_RATE * BLOCK_DURATION)
 
-START_THRESHOLD = 0.0075   # sensibilidad de inicio
-SILENCE_THRESHOLD = 0.0055 # sensibilidad de silencio
+START_THRESHOLD = 0.02 # sensibilidad de inicio
+SILENCE_THRESHOLD = 0.004   # sensibilidad de silencio
 MAX_SILENCE_SECONDS = 0.75
 MAX_RECORD_SECONDS = 10.0
 MIN_SPEECH_SECONDS = 0.35
@@ -40,7 +40,7 @@ def record_until_silence() -> str | None:
 
     frames: list[np.ndarray] = []
     prebuffer: list[np.ndarray] = []
-    max_prebuffer_blocks = 5  # 5 * 0.01s = 0.5s
+    max_prebuffer_blocks = 5  # 5 * 0.1s = 0.5s
 
     speech_started = False
     silence_time = 0.0
@@ -55,19 +55,18 @@ def record_until_silence() -> str | None:
     ) as stream:
         while total_time < MAX_RECORD_SECONDS:
             audio_chunk, _ = stream.read(BLOCK_SIZE)
-            audio_chunk = np.where(np.abs(audio_chunk) < 0.0035, 0, audio_chunk)
-            audio_chunk = audio_chunk * 1.05
-            audio_chunk = np.clip(audio_chunk, -1.0, 1.0)
             level = rms(audio_chunk)
-            print(f"Nivel audio: {level:.4f}")
             total_time += BLOCK_DURATION
+
+            if level > 0.001:
+                print(f"Nivel audio: {level:.4f}")
 
             if not speech_started:
                 prebuffer.append(audio_chunk.copy())
                 if len(prebuffer) > max_prebuffer_blocks:
                     prebuffer.pop(0)
 
-                if level >= START_THRESHOLD:
+                if level >= START_THRESHOLD or (len(prebuffer) >= 3 and level > 0.015):
                     speech_started = True
                     frames.extend(prebuffer)
                     speech_time += BLOCK_DURATION
@@ -89,10 +88,20 @@ def record_until_silence() -> str | None:
         return None
 
     audio = np.concatenate(frames, axis=0)
-    output_path = tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir=AUDIO_DIR).name
+
+    max_val = np.max(np.abs(audio))
+    if max_val > 0:
+        audio = audio / max_val * 0.95
+
+    output_path = tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=".wav",
+        dir=AUDIO_DIR,
+    ).name
     sf.write(output_path, audio, SAMPLE_RATE)
     print(f"Audio capturado en: {output_path}")
     return output_path
+
 
 def send_audio(audio_path: str) -> dict:
     with open(audio_path, "rb") as f:
@@ -112,7 +121,8 @@ def send_audio(audio_path: str) -> dict:
             response.raise_for_status()
 
         return response.json()
-    
+
+
 def play_audio(audio_path: str) -> None:
     if not audio_path:
         return
@@ -161,20 +171,18 @@ def main() -> int:
                 print("\n--- AUDIO PATH ---")
                 print(audio_path_out)
 
-
                 if audio_path_out:
                     print("\nTERRA está respondiendo...")
                     play_audio(audio_path_out)
                     time.sleep(0.25)
-                
+
                 print("\n--- SPOKEN RESPONSE ---")
                 print(spoken_response)
-
             else:
                 print("\nNo se detectó voz útil en este ciclo.")
 
             if tts_error:
-                print(f"\n--- TTS ERROR ---")
+                print("\n--- TTS ERROR ---")
                 print(tts_error)
 
             time.sleep(0.5)

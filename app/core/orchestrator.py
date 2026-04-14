@@ -129,15 +129,15 @@ class Orchestrator:
 
         if intent == "copy_text":
             return "Lo copié."
-        
+                
         if intent == "find_file":
-            return response
+            return "Encontré un archivo relevante."
 
         if intent == "open_found_file":
-            return response
+            return "Abrí el archivo."
 
         if intent == "open_file":
-            return response
+            return "Abrí el archivo."
 
         if intent == "draft_message":
             return "Preparé el correo para tu profesor."

@@ -96,6 +96,7 @@ class FileActionsModule:
             "terra",
             "busca",
             "buscar",
+            "buscan",
             "encuentra",
             "abre",
             "abrir",
@@ -107,13 +108,17 @@ class FileActionsModule:
             "pdf",
             "por favor",
             "cierra",
+            "comillas",
         ]
+
 
         for phrase in noise_phrases:
             text = text.replace(phrase, " ")
 
+        text = text.replace('"', " ").replace("'", " ")
         text = re.sub(r"\s+", " ", text).strip()
         return text
+    
 
     # -------------------------
     # FOLDERS
@@ -143,38 +148,46 @@ class FileActionsModule:
 
         score = 0.0
 
+        # exactos
         if q_norm == f_norm:
-            score += 100
+            score += 200
 
         if q_compact == f_compact:
-            score += 95
+            score += 180
 
+        # substring fuerte
         if q_norm in f_norm:
-            score += 80
+            score += 120
 
         if q_compact in f_compact:
-            score += 85
+            score += 130
 
         q_tokens = set(q_norm.split())
         f_tokens = set(f_norm.split())
-
         common = q_tokens.intersection(f_tokens)
-        score += len(common) * 12
 
-        # peso MUY alto para números coincidentes
+        score += len(common) * 18
+
+        # números importan mucho
         q_numbers = self._extract_numbers(q_norm)
         f_numbers = self._extract_numbers(f_norm)
 
         if q_numbers and f_numbers:
             common_numbers = q_numbers.intersection(f_numbers)
-            score += len(common_numbers) * 60
-
-            # penaliza si el query tenía número y el archivo no coincide
+            score += len(common_numbers) * 70
             if not common_numbers:
-                score -= 60
+                score -= 80
 
-        score += difflib.SequenceMatcher(None, q_norm, f_norm).ratio() * 50
-        score += difflib.SequenceMatcher(None, q_compact, f_compact).ratio() * 50
+        # fuzzy general, pero con menos peso
+        ratio_norm = difflib.SequenceMatcher(None, q_norm, f_norm).ratio()
+        ratio_compact = difflib.SequenceMatcher(None, q_compact, f_compact).ratio()
+
+        score += ratio_norm * 25
+        score += ratio_compact * 25
+
+        # penalización si casi no comparten tokens
+        if len(common) == 0 and ratio_compact < 0.75:
+            score -= 60
 
         return score
 
@@ -190,7 +203,9 @@ class FileActionsModule:
                     continue
 
                 score = self._score_file_match(query, path.name)
-                if score >= 45:
+
+                # filtro más estricto
+                if score >= 85:
                     scored_matches.append((score, path))
 
         scored_matches.sort(key=lambda x: x[0], reverse=True)

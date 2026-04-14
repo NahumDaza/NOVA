@@ -130,6 +130,30 @@ class IntentRouter:
             ],
         ):
             return "organize_day"
+        
+        if self._match_any(
+            text,
+            [
+                "busca el archivo",
+                "busca archivo",
+                "buscar archivo",
+                "buscan archivo",
+                "encuentra el archivo",
+                "encuentra archivo",
+                "busca el pdf",
+                "busca pdf",
+                "abre el archivo",
+                "abre archivo",
+                "leer archivo",
+                "lee archivo",
+                "lee el archivo",
+            ],
+        ):
+            if "lee" in text or "leer" in text:
+                return "read_file"
+            if "abre" in text or "abrir" in text:
+                return "open_file"
+            return "find_file"
 
         if self._match_math(text):
             return "calculate_math"

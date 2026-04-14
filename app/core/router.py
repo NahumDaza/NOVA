@@ -61,6 +61,19 @@ class IntentRouter:
             ],
         ):
             return "open_found_file"
+        
+        if self._match_any(
+            text,
+            [
+                "abre el último archivo encontrado",
+                "abre el ultimo archivo encontrado",
+                "abre el archivo encontrado",
+                "ultimo archivo encontrado",
+                "último archivo encontrado",
+                "archivo encontrado",
+            ],
+        ):
+            return "open_found_file"
 
         if self._match_any(text, ["abre", "open", "abrir"]):
             if any(x in text for x in ["archivo", ".pdf", ".doc", ".docx", ".txt", ".xlsx", ".pptx"]):

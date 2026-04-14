@@ -150,7 +150,7 @@ class Orchestrator:
         if intent == "open_app":
             confirmation = self.persona.confirmation(state)
             state.last_confirmation = confirmation
-            return f"{confirmation} {base_response}".strip()
+            return confirmation
 
         if intent == "copy_text":
             confirmation = self.persona.confirmation(state)
@@ -170,7 +170,7 @@ class Orchestrator:
         if intent == "open_folder":
             confirmation = self.persona.confirmation(state)
             state.last_confirmation = confirmation
-            return f"{confirmation} {base_response}".strip()
+            return confirmation
 
         if intent == "find_file":
             confirmation = self.persona.confirmation(state)
@@ -180,12 +180,12 @@ class Orchestrator:
         if intent == "open_found_file":
             confirmation = self.persona.confirmation(state)
             state.last_confirmation = confirmation
-            return f"{confirmation} {base_response}".strip()
+            return confirmation
 
         if intent == "open_file":
             confirmation = self.persona.confirmation(state)
             state.last_confirmation = confirmation
-            return f"{confirmation} {base_response}".strip()
+            return confirmation)
 
         return base_response or response
 

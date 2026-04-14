@@ -16,11 +16,11 @@ class FileActionsModule:
             "documents": Path.home() / "Documents",
             "escritorio": Path.home() / "Desktop",
             "desktop": Path.home() / "Desktop",
-            "proyectos": Path.home() / "Projects",
-            "projects": Path.home() / "Projects",
-            "carpeta de proyectos": Path.home() / "Projects",
-            "mi carpeta de proyectos": Path.home() / "Projects",
-            "nueva": Path.home() / "NOVA",
+            "proyectos": Path.home() / "NOVA",
+            "project": Path.home() / "NOVA",
+            "projects": Path.home() / "NOVA",
+            "carpeta de proyectos": Path.home() / "NOVA",
+            "mi carpeta de proyectos": Path.home() / "NOVA",
             "nova": Path.home() / "NOVA",
         }
 

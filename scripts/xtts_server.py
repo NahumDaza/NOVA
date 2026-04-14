@@ -78,6 +78,14 @@ def prepare_text_for_speech(text: str) -> str:
     cleaned = cleaned.replace(" Gracias por su comprensión.", " Gracias por su comprensión")
     cleaned = cleaned.replace(" Le agradecería si me pudiera indicar", " Le agradecería que me indicara")
     cleaned = cleaned.replace(" así como", " y también")
+    cleaned = cleaned.replace("Downloads", "Descargas")
+    cleaned = cleaned.replace("Documents", "Documentos")
+    cleaned = cleaned.replace("Desktop", "Escritorio")
+    cleaned = cleaned.replace("Finder", "Finder")
+    cleaned = cleaned.replace("Google Chrome", "Chrome")
+    cleaned = cleaned.replace("Visual Studio Code", "VS Code")
+    cleaned = cleaned.replace("Notes", "Notas")
+    cleaned = cleaned.replace("Reminders", "Recordatorios")
 
     greeting_replacements = {
         "Hola, soy NOVA con mi nueva voz": "Soy Nóva con mi nueva voz",

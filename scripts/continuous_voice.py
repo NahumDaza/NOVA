@@ -25,7 +25,7 @@ BLOCK_SIZE = int(SAMPLE_RATE * BLOCK_DURATION)
 START_THRESHOLD = 0.008   # sensibilidad de inicio
 SILENCE_THRESHOLD = 0.006 # sensibilidad de silencio
 MAX_SILENCE_SECONDS = 1.2
-MAX_RECORD_SECONDS = 10.0
+MAX_RECORD_SECONDS = 11.0
 MIN_SPEECH_SECONDS = 0.7
 
 
@@ -39,6 +39,9 @@ def record_until_silence() -> str | None:
     print("\nEscuchando... habla cuando quieras.")
 
     frames: list[np.ndarray] = []
+    prebuffer: list[np.ndarray] = []
+    max_prebuffer_blocks = 3  # 3 * 0.2s = 0.6s
+
     speech_started = False
     silence_time = 0.0
     speech_time = 0.0
@@ -52,16 +55,19 @@ def record_until_silence() -> str | None:
     ) as stream:
         while total_time < MAX_RECORD_SECONDS:
             audio_chunk, _ = stream.read(BLOCK_SIZE)
-            # reducir ruido bajo
             audio_chunk = np.where(np.abs(audio_chunk) < 0.005, 0, audio_chunk)
             level = rms(audio_chunk)
             print(f"Nivel audio: {level:.4f}")
             total_time += BLOCK_DURATION
 
             if not speech_started:
+                prebuffer.append(audio_chunk.copy())
+                if len(prebuffer) > max_prebuffer_blocks:
+                    prebuffer.pop(0)
+
                 if level >= START_THRESHOLD:
                     speech_started = True
-                    frames.append(audio_chunk.copy())
+                    frames.extend(prebuffer)
                     speech_time += BLOCK_DURATION
             else:
                 frames.append(audio_chunk.copy())
@@ -83,7 +89,6 @@ def record_until_silence() -> str | None:
     sf.write(output_path, audio, SAMPLE_RATE)
     print(f"Audio capturado en: {output_path}")
     return output_path
-
 
 def send_audio(audio_path: str) -> dict:
     with open(audio_path, "rb") as f:

@@ -15,7 +15,7 @@ os.environ["COQUI_TOS_AGREED"] = "1"
 
 app = FastAPI(title="NOVA XTTS Server")
 
-SPEAKER_WAV = "/Users/macuser/nova-audio/nova-voice-v2.wav"
+SPEAKER_WAV = SPEAKER_WAV = "/Users/macuser/nova-audio/nova-reference-v3.wav"
 AUDIO_DIR = Path("/Users/macuser/nova-audio")
 AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 import contextlib
 import re
 import subprocess
-import tempfile
 import uuid
 import wave
 from pathlib import Path
@@ -47,16 +46,11 @@ class XTTSService:
             "como vas": "como_vas.mp3",
             "como estas": "como_estas.mp3",
             "todo bien por aqui": "todo_bien.mp3",
-        }
-
-        self.clip_enabled_intents = {
-            "open_app",
-            "open_folder",
-            "save_note",
-            "save_task",
-            "copy_text",
-            "open_found_file",
-            "open_file",
+            "en orden jefe": "en_orden_jefe.mp3",
+            "listo nahum": "listo_nahum.mp3",
+            "en que te ayudo": "en_que_te_ayudo.mp3",
+            "como va tu dia": "como_va_tu_dia.mp3",
+            "todo bien por aqui nahum": "todo_bien_nahum.mp3",
         }
 
     def _clean_text(self, text: str) -> str:
@@ -239,32 +233,35 @@ class XTTSService:
         wav_paths = [self._convert_to_wav(path) for path in audio_paths]
         return self._merge_wav_files(wav_paths)
 
-    def synthesize_many(self, text: str, intent: str | None = None) -> List[str]:
-        chunks = self._chunk_text(text)
-        if not chunks:
+    def _build_audio_sequence(self, text: str) -> List[str]:
+        sentences = self._split_into_sentences(text)
+        if not sentences:
             raise ValueError("No text provided for TTS synthesis.")
 
-        audio_paths: List[str] = []
-        for chunk in chunks:
-            audio_paths.append(self._synthesize_chunk(chunk))
+        audio_parts: List[str] = []
 
-        return audio_paths
+        for sentence in sentences:
+            clip = self._get_clip_for_text(sentence)
+            if clip:
+                audio_parts.append(clip)
+                continue
+
+            chunks = self._chunk_text(sentence)
+            for chunk in chunks:
+                audio_parts.append(self._synthesize_chunk(chunk))
+
+        return audio_parts
+
+    def synthesize_many(self, text: str, intent: str | None = None) -> List[str]:
+        return self._build_audio_sequence(text)
 
     def synthesize(self, text: str, intent: str | None = None) -> str:
-        if intent in self.clip_enabled_intents:
-            clip_path = self._get_clip_for_text(text)
-            if clip_path:
-                return clip_path
+        audio_parts = self._build_audio_sequence(text)
 
-        chunks = self._chunk_text(text)
-        if not chunks:
-            raise ValueError("No text provided for TTS synthesis.")
+        if len(audio_parts) == 1:
+            return audio_parts[0]
 
-        if len(chunks) == 1:
-            return self._synthesize_chunk(chunks[0])
-
-        audio_paths = [self._synthesize_chunk(chunk) for chunk in chunks]
-        return self._merge_wav_files(audio_paths)
+        return self._concat_audio_files(audio_parts)
 
     def synthesize_with_prefix(
         self,
@@ -272,23 +269,19 @@ class XTTSService:
         main_text: str,
         intent: str | None = None,
     ) -> str:
-        audio_parts: List[str] = []
+        parts: List[str] = []
+
+        prefix_text = self._clean_text(prefix_text or "")
+        main_text = self._clean_text(main_text)
 
         if prefix_text:
-            prefix_clip = self._get_clip_for_text(prefix_text)
-            if prefix_clip:
-                audio_parts.append(prefix_clip)
-            else:
-                audio_parts.append(self.synthesize(prefix_text, intent=None))
+            parts.append(prefix_text)
 
-        main_text = self._clean_text(main_text)
         if main_text:
-            audio_parts.append(self.synthesize(main_text, intent=None))
+            parts.append(main_text)
 
-        if not audio_parts:
-            raise ValueError("No audio parts generated for synthesize_with_prefix.")
+        merged_text = " ".join(parts).strip()
+        if not merged_text:
+            raise ValueError("No text provided for synthesize_with_prefix.")
 
-        if len(audio_parts) == 1:
-            return audio_parts[0]
-
-        return self._concat_audio_files(audio_parts)
+        return self.synthesize(merged_text, intent=intent)
